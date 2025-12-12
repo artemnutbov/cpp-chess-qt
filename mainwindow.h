@@ -29,6 +29,9 @@ private:
     int start_x_pos = 0;
     int start_y_pos = 0;
     int cell_size = 0;
+    std::pair<int,int> black_king_index;
+    std::pair<int,int> white_king_index;
+
     std::array<std::array<QPoint,8>,8> coordinates_board;
     bool is_first_click = false;
     bool is_white_turn_to_move = true;

@@ -38,7 +38,8 @@ void Knight::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board, std:
     if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
         if(!board[index.first][index.second])
             map.insert(IndexPair(index,false));
-        else if(board[index.first][index.second]->is_white != is_white ) {
+        else if((board[index.first][index.second]->is_white != is_white) && (board[index.first][index.second]->what_figure() != Figures::white_king)
+                 && (board[index.first][index.second]->what_figure() != Figures::black_king))  {
             map.insert(IndexPair(index,true));
         }
 

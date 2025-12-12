@@ -25,22 +25,23 @@ void Rook::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_
 
 
 template <typename Comp>
-void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,std::pair<int,int> new_index, Comp condition, bool is_increment, bool is_row) {
-    int& index = (is_row) ? new_index.first : new_index.second;
+void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,std::pair<int,int> index, Comp condition, bool is_increment, bool is_row) {
+    int& ref_index = (is_row) ? index.first : index.second;
     std::function<void(int&)> func = (is_increment) ? [](int& i) { ++i; } :  [](int& i) { --i; };
 
-    func(index);
-    while(condition(index )) { // and need to check out Comp as const reference argument will be faster or no
-        if(!board[new_index.first][new_index.second])
-            map.insert(IndexPair(new_index,false));
-        else if(board[new_index.first][new_index.second]->is_white != is_white ) {
-            map.insert(IndexPair(new_index,true));
+    func(ref_index);
+    while(condition(ref_index )) { // and need to check out Comp as const reference argument will be faster or no
+        if(!board[index.first][index.second])
+            map.insert(IndexPair(index,false));
+        else if((board[index.first][index.second]->is_white != is_white) && (board[index.first][index.second]->what_figure() != Figures::white_king)
+                                && (board[index.first][index.second]->what_figure() != Figures::black_king)) {
+            map.insert(IndexPair(index,true));
             break;
         }
         else
             break;
 
-        func(index);
+        func(ref_index);
     }
 }
 

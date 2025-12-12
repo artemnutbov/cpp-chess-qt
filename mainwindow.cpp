@@ -11,7 +11,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow),x(0),y(0),start_x_pos(100),start_y_pos(70),cell_size(60)
+    , ui(new Ui::MainWindow), x(0), y(0), start_x_pos(100), start_y_pos(70), cell_size(60), black_king_index(7, 3), white_king_index(0, 3)
 {
     ui->setupUi(this);
     set_up_images();
@@ -205,7 +205,8 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         else {
             if(!index_pair_map.empty()) // !!! don't sure maybe wrong place!!!
                 index_pair_map.clear();
-            board[y][x]->where_to_move(index_pair_map,board, y,x,is_white_turn_to_move);
+            board[y][x]->where_to_move(index_pair_map,board, y,x,is_white_turn_to_move); // rewrite this. need to take argument baard onlt by reference. and in all overloaded functions need to check
+                                                                                        // create copy poiner then swap squares and call function is king under attack or no if is not then add move if yes do not add
         }
     }
     else{
@@ -237,21 +238,17 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
             board[y][x]->y = coordinates_board[new_y_index][new_x_index].y();
             board[y][x]->handle_move();
             is_white_turn_to_move = !is_white_turn_to_move;
+            if((board[y][x]->what_figure() == Figures::white_king)) {
+                white_king_index.first = new_y_index;
+                white_king_index.second = new_x_index;
+
+            }
+            else if((board[y][x]->what_figure() == Figures::black_king)){
+                black_king_index.first = new_y_index;
+                black_king_index.second = new_x_index;
+            }
             std::swap(board[y][x],board[new_y_index][new_x_index]);
         }
-
-        // if (area.contains(pos)) {
-        //     x += 60;
-        //     y += 60;
-        //     qDebug() << pos.x();
-        //     qDebug() << pos.y();
-        //     qDebug() << "Clicked inside the target area!";
-        //     update();
-        // } else {
-        //     qDebug() << "Clicked outside the target area.";
-        // }
-
-        //pos = event->pos();
 
 
         is_first_click = false;
