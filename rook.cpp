@@ -1,41 +1,33 @@
 #include "rook.h"
 
 Rook::Rook(const Figures& figure,int x, int y, bool is_white)
-    :Basic_figure(figure,x,y,is_white) {}
+    :Basic_figure(figure,x,y,is_white), is_in_start_pos(true) {}
 
 
 
 void Rook::handle_move() {
-
+    if(is_in_start_pos)
+        is_in_start_pos = false;
 }
 
 void Rook::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_i, int current_j) {
     std::pair<int,int> new_index(current_i, current_j);
 
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i < 8; }, true, new_index.first);
-    new_index.first = current_i;
+    what_to_do_whith_figure(map, board, new_index, [](int i) { return i < 8; }, true, true);
 
+    what_to_do_whith_figure(map, board, new_index, [](int i) { return i >= 0; }, false, true);
 
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i >= 0; }, false, new_index.first);
-    new_index.first = current_i;
+    what_to_do_whith_figure(map, board, new_index, [](int i) { return i < 8; }, true, false);
 
-
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i < 8; }, true, new_index.second);
-    new_index.second = current_j;
-
-
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i >= 0; }, false, new_index.second);
-    new_index.second = current_j;
+    what_to_do_whith_figure(map, board, new_index, [](int i) { return i >= 0; }, false, false);
 
 }
 
 
 template <typename Comp>
-void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,const std::pair<int,int>& new_index, Comp condition, bool is_increment, int& index) {
-
+void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,std::pair<int,int> new_index, Comp condition, bool is_increment, bool is_row) {
+    int& index = (is_row) ? new_index.first : new_index.second;
     std::function<void(int&)> func = (is_increment) ? [](int& i) { ++i; } :  [](int& i) { --i; };
-
-
 
     func(index);
     while(condition(index )) { // and need to check out Comp as const reference argument will be faster or no
@@ -50,7 +42,6 @@ void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,const s
 
         func(index);
     }
-
 }
 
 void Rook::where_to_move(MoveMap& map, const ArrayBoard& board, int current_i, int current_j,bool is_white_turn_to_move) {

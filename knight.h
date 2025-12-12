@@ -2,8 +2,7 @@
 #define KNIGHT_H
 #include "Basic_figure.h"
 
-class Knight: public Basic_figure
-{
+class Knight: public  Basic_figure {
 public:
     Knight(const Figures& figure, int x, int y, bool is_white);
 

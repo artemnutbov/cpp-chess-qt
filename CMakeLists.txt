@@ -36,6 +36,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         bishop.h bishop.cpp
         queen.h queen.cpp
         knight.h knight.cpp
+        king.h king.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET my_chess_game APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

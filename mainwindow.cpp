@@ -7,6 +7,7 @@
 #include <QPainterPath>
 #include "queen.h"
 #include "knight.h"
+#include "king.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -70,7 +71,7 @@ void MainWindow::set_up() {
     board[0][6] = std::make_unique<Knight>(Figures::white_knight,start_x_pos+6*cell_size,start_y_pos,true);
     board[0][0] = std::make_unique<Rook>(Figures::white_rook,start_x_pos,start_y_pos,true);
     board[0][7] = std::make_unique<Rook>(Figures::white_rook,start_x_pos+7*cell_size,start_y_pos,true);
-    board[0][3] = std::make_unique<Pawn>(Figures::white_king,start_x_pos+3*cell_size,start_y_pos,true);
+    board[0][3] = std::make_unique<King>(Figures::white_king,start_x_pos+3*cell_size,start_y_pos,true);
     board[0][4] = std::make_unique<Queen>(Figures::white_queen,start_x_pos+4*cell_size,start_y_pos,true);
 
     board[7][0] = std::make_unique<Rook>(Figures::black_rook,start_x_pos,start_y_pos+ cell_size * 7,false);
@@ -83,7 +84,7 @@ void MainWindow::set_up() {
 
     board[7][1] = std::make_unique<Knight>(Figures::black_knight,start_x_pos+1*cell_size,start_y_pos + cell_size * 7,false);
     board[7][6] = std::make_unique<Knight>(Figures::black_knight,start_x_pos+6*cell_size,start_y_pos + cell_size * 7,false);
-    board[7][3] = std::make_unique<Pawn>(Figures::black_king,start_x_pos+3*cell_size,start_y_pos + cell_size * 7,false);
+    board[7][3] = std::make_unique<King>(Figures::black_king,start_x_pos+3*cell_size,start_y_pos + cell_size * 7,false);
     board[7][4] = std::make_unique<Queen>(Figures::black_queen,start_x_pos+4*cell_size,start_y_pos + cell_size * 7,false);
 
     for(size_t i = 0;i<8;++i) {

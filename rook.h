@@ -12,7 +12,9 @@ protected:
     void move_for_both_sides(MoveMap& , const ArrayBoard& ,int , int );
 
     template <typename Comp>
-    void what_to_do_whith_figure(MoveMap& , const ArrayBoard& , const std::pair<int,int>& , Comp, bool, int&);
+    void what_to_do_whith_figure(MoveMap& , const ArrayBoard& , std::pair<int,int> , Comp, bool, bool);
+private:
+    bool is_in_start_pos;
 };
 
 #endif // ROOK_H
