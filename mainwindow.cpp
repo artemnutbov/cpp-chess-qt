@@ -207,6 +207,29 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
                 index_pair_map.clear();
             board[y][x]->where_to_move(index_pair_map,board, y,x,is_white_turn_to_move); // rewrite this. need to take argument baard onlt by reference. and in all overloaded functions need to check
                                                                                         // create copy poiner then swap squares and call function is king under attack or no if is not then add move if yes do not add
+            if((board[y][x]->what_figure() != Figures::black_king) && (board[y][x]->what_figure() != Figures::white_king)) {
+                std::pair<int, int> king_index = (is_white_turn_to_move) ? white_king_index : black_king_index;
+                for(const auto& it : index_pair_map) {
+                    if(it.second){
+                        std::unique_ptr<Basic_figure> tmp = std::move(board[it.first.first][it.first.second]);
+                        std::swap(board[y][x], board[it.first.first][it.first.second]);
+                        bool is_in_check = static_cast<King*>(board[king_index.first][king_index.second].get())->is_king_under_attack(board, king_index.first, king_index.second);
+                        std::swap(board[y][x], board[it.first.first][it.first.second]);
+                        board[it.first.first][it.first.second] = std::move(tmp);
+                        if(is_in_check)
+                            index_pair_map.erase(it.first);
+
+                    }
+                    else {
+                        std::swap(board[y][x], board[it.first.first][it.first.second]);
+                        bool is_in_check = static_cast<King*>(board[king_index.first][king_index.second].get())->is_king_under_attack(board, king_index.first, king_index.second);
+                        std::swap(board[y][x], board[it.first.first][it.first.second]);
+                        if(is_in_check)
+                            index_pair_map.erase(it.first);
+
+                    }
+                }
+            }
         }
     }
     else{

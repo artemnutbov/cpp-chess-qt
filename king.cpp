@@ -14,7 +14,7 @@ void King::handle_move() {
 }
 
 
-bool King::is_king_under_attack(const ArrayBoard& board, int current_row, int current_col) {
+bool King::is_king_under_attack(const ArrayBoard& board, int current_row, int current_col) { // need to rewrite bcs it is awful to take 2 int instead of  std::pair
     if(is_attacked_by_knight(board, current_row, current_col) || is_attacked_by_bishop(board, current_row, current_col)
         || is_attacked_by_rook(board, current_row, current_col))
         return true;
