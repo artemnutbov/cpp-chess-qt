@@ -139,7 +139,7 @@ void MainWindow::paintEvent(QPaintEvent *)
         for(const auto& it : index_pair_map) {
             QPointF center_of_cell(it.first.second*cell_size + start_x_pos + half_cell_size ,it.first.first*cell_size + half_cell_size +  start_y_pos);
 
-            if(it.second){ // idk problem with drawing that circle same transparent color
+            if(it.second == Move_types::capture){ // idk problem with drawing that circle same transparent color
                 path.addEllipse(center_of_cell,half_cell_size,half_cell_size);
                 path.addEllipse(center_of_cell,half_cell_size-cicle_thickness,half_cell_size-cicle_thickness);
                 p.setBrush(my_transparent_black);
@@ -205,12 +205,12 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         else {
             if(!index_pair_map.empty()) // !!! don't sure maybe wrong place!!!
                 index_pair_map.clear();
-            board[y][x]->where_to_move(index_pair_map,board, y,x,is_white_turn_to_move); // rewrite this. need to take argument baard onlt by reference. and in all overloaded functions need to check
-                                                                                        // create copy poiner then swap squares and call function is king under attack or no if is not then add move if yes do not add
+            board[y][x]->where_to_move(index_pair_map,board, y,x,is_white_turn_to_move);
+
             if((board[y][x]->what_figure() != Figures::black_king) && (board[y][x]->what_figure() != Figures::white_king)) {
                 std::pair<int, int> king_index = (is_white_turn_to_move) ? white_king_index : black_king_index;
                 for(const auto& it : index_pair_map) {
-                    if(it.second){
+                    if(it.second == Move_types::capture){
                         std::unique_ptr<Basic_figure> tmp = std::move(board[it.first.first][it.first.second]);
                         std::swap(board[y][x], board[it.first.first][it.first.second]);
                         bool is_in_check = static_cast<King*>(board[king_index.first][king_index.second].get())->is_king_under_attack(board, king_index.first, king_index.second);
@@ -252,8 +252,15 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
             //     board[new_y_index][new_x_index].reset();
             // }
         if(it != index_pair_map.end()) {
-            if(it->second)
+            if(it->second == Move_types::capture)
                 board[new_y_index][new_x_index].reset();
+            else if(it->second == Move_types::short_castling) {
+                board[y][0]->x = coordinates_board[y][new_x_index+1].x();
+
+                board[y][0]->handle_move();
+                std::swap(board[y][0], board[y][new_x_index+1]);
+
+            }
         }
 
         if(!board[new_y_index][new_x_index] && index_pair_map.contains(std::pair<int,int>(new_y_index,new_x_index))) {

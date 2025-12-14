@@ -18,22 +18,22 @@ void Pawn::where_to_move(MoveMap& map,const ArrayBoard& board
     if(is_white && is_white_turn_to_move) {
         ++new_index.first;
         if(!board[new_index.first][new_index.second]) {
-            map.insert(IndexPair(new_index,false));
+            map.insert(IndexPair(new_index, Move_types::move_to_empty_square));
             ++new_index.first;
             if(!board[new_index.first][new_index.second] && is_in_start_pos)
-                map.insert(IndexPair(new_index,false));
+                map.insert(IndexPair(new_index, Move_types::move_to_empty_square));
             --new_index.first;
         }
 
         new_index.second+=1;
         if(board[new_index.first][new_index.second] && new_index.second < 8 ) {
             if(board[new_index.first][new_index.second]->is_white != is_white )
-                map.insert(IndexPair(new_index,true));
+                map.insert(IndexPair(new_index, Move_types::capture));
         }
         new_index.second-=2;
         if(board[new_index.first][new_index.second] && new_index.second >= 0  ) {
             if(board[new_index.first][new_index.second]->is_white != is_white )
-                map.insert(IndexPair(new_index,true));
+                map.insert(IndexPair(new_index, Move_types::capture));
         }
         // !!! need to handle last pos pawn(promote to any figure)
         // !!! and also need to handle en passant capture
@@ -42,22 +42,22 @@ void Pawn::where_to_move(MoveMap& map,const ArrayBoard& board
     else if(!is_white && !is_white_turn_to_move) { // need to write helper function that do all computatation
         --new_index.first;
         if(!board[new_index.first][new_index.second]) {
-            map.insert(IndexPair(new_index,false));
+            map.insert(IndexPair(new_index, Move_types::move_to_empty_square));
             --new_index.first;
             if(!board[new_index.first][new_index.second] && is_in_start_pos)
-                map.insert(IndexPair(new_index,false));
+                map.insert(IndexPair(new_index,  Move_types::move_to_empty_square));
             ++new_index.first;
         }
 
         ++new_index.second;
         if(board[new_index.first][new_index.second] && new_index.second < 8 ) {
             if(board[new_index.first][new_index.second]->is_white != is_white )
-                map.insert(IndexPair(new_index,true));
+                map.insert(IndexPair(new_index, Move_types::capture));
         }
         new_index.second-=2;
         if(board[new_index.first][new_index.second] && new_index.second >= 0  ) {
             if(board[new_index.first][new_index.second]->is_white != is_white )
-                map.insert(IndexPair(new_index,true));
+                map.insert(IndexPair(new_index, Move_types::capture));
         }
     }
 }

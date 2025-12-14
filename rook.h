@@ -8,6 +8,7 @@ public:
 
     void where_to_move(MoveMap& ,const ArrayBoard& , int , int , bool ) override;
     virtual void handle_move() override;
+    bool is_in_start_position()const;
 protected:
     void move_for_both_sides(MoveMap& , const ArrayBoard& ,int , int );
 

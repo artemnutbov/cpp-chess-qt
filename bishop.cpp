@@ -37,10 +37,10 @@ void Bishop::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board, std:
     func_col(index.second);
     while(condition_row(index.first) &&  condition_col(index.second)) { // and need to check out Comp as const reference argument will be faster or no
         if(!board[index.first][index.second])
-            map.insert(IndexPair(index,false));
+            map.insert(IndexPair(index,Move_types::move_to_empty_square));
         else if((board[index.first][index.second]->is_white != is_white) && (board[index.first][index.second]->what_figure() != Figures::white_king)
                                                                             && (board[index.first][index.second]->what_figure() != Figures::black_king) ) {
-            map.insert(IndexPair(index,true));
+            map.insert(IndexPair(index,Move_types::capture));
             break;
         }
         else

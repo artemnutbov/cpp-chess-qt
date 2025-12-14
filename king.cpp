@@ -1,4 +1,5 @@
 #include "king.h"
+#include "rook.h"
 
 King::King(const Figures& figure,int x, int y, bool is_white)
     :Basic_figure(figure,x,y,is_white), is_in_start_pos(true) {}
@@ -149,12 +150,21 @@ void King::where_to_move(MoveMap& map, const ArrayBoard& board, int current_row,
 
                     if(!board[index.first][index.second]){
                         if(!can_move)
-                            map.insert(IndexPair(index,false));
+                            map.insert(IndexPair(index, Move_types::move_to_empty_square));
                         continue;
                     }
                     else if(board[index.first][index.second]->is_white != is_white && !can_move ) {
-                        map.insert(IndexPair(index,true));
+                        map.insert(IndexPair(index, Move_types::capture));
                     }
+                }
+            }
+        }
+        // short_castling
+        if(is_in_start_pos && board[current_row][0] && board[current_row][0]->what_figure() == Figures::white_rook) {
+            if(!board[current_row][current_col - 1] && !board[current_row][current_col - 2]) {
+                if(dynamic_cast<Rook*>(board[current_row][0].get())->is_in_start_position() && !is_king_under_attack(board, current_row, current_col)
+                    &&  !is_king_under_attack(board, current_row, current_col - 1) && !is_king_under_attack(board, current_row, current_col - 2)) {
+                    map.insert(IndexPair(std::pair<int,int>(current_row, current_col - 2), Move_types::short_castling));
                 }
             }
         }
@@ -173,11 +183,11 @@ void King::where_to_move(MoveMap& map, const ArrayBoard& board, int current_row,
 
                     if(!board[index.first][index.second]){
                         if(!can_move)
-                            map.insert(IndexPair(index,false));
+                            map.insert(IndexPair(index, Move_types::move_to_empty_square));
                         continue;
                     }
                     else if(board[index.first][index.second]->is_white != is_white && !can_move ) {
-                        map.insert(IndexPair(index,true));
+                        map.insert(IndexPair(index, Move_types::capture));
                     }
                 }
             }

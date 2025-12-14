@@ -9,10 +9,14 @@ struct PairHash {
     }
 };
 
-using IndexPair = std::pair<std::pair<int,int>,bool>;
-using MoveMap = boost::unordered_flat_map<std::pair<int,int>, bool, PairHash>;
+enum class Move_types {
+    move_to_empty_square, short_castling, long_castling, capture
+};
 
-enum class Figures{
+using IndexPair = std::pair<std::pair<int,int>,Move_types>;
+using MoveMap = boost::unordered_flat_map<std::pair<int,int>, Move_types, PairHash>;
+
+enum class Figures {
     white_pawn,white_king,white_knight,white_queen,white_rook,white_bishop,
     black_pawn,black_king,black_knight,black_queen,black_rook,black_bishop,none
 };

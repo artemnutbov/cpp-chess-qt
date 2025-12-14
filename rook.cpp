@@ -3,7 +3,9 @@
 Rook::Rook(const Figures& figure,int x, int y, bool is_white)
     :Basic_figure(figure,x,y,is_white), is_in_start_pos(true) {}
 
-
+bool Rook::is_in_start_position()const {
+    return is_in_start_pos;
+}
 
 void Rook::handle_move() {
     if(is_in_start_pos)
@@ -32,10 +34,10 @@ void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,std::pa
     func(ref_index);
     while(condition(ref_index )) { // and need to check out Comp as const reference argument will be faster or no
         if(!board[index.first][index.second])
-            map.insert(IndexPair(index,false));
+            map.insert(IndexPair(index, Move_types::move_to_empty_square));
         else if((board[index.first][index.second]->is_white != is_white) && (board[index.first][index.second]->what_figure() != Figures::white_king)
                                 && (board[index.first][index.second]->what_figure() != Figures::black_king)) {
-            map.insert(IndexPair(index,true));
+            map.insert(IndexPair(index, Move_types::capture));
             break;
         }
         else
