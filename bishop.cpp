@@ -4,9 +4,7 @@ Bishop::Bishop(const Figures& figure,int x, int y, bool is_white)
     :Basic_figure(figure,x,y,is_white) {}
 
 
-void Bishop::handle_move() {
 
-}
 
 void Bishop::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_row, int current_col) {
     std::pair<int,int> new_index(current_row, current_col);

@@ -37,7 +37,7 @@ public:
     virtual Figures what_figure()const;
     virtual void where_to_move(MoveMap& map,const std::array<std::array<std::unique_ptr<Basic_figure>,8>,8>& board
                                ,int current_i, int current_j,bool is_white_turn_to_move) = 0;
-    virtual void handle_move();
+    virtual void handle_move(int , int);
 };
 
 using ArrayBoard = std::array<std::array<std::unique_ptr<Basic_figure>,8>,8>;

@@ -5,9 +5,6 @@ Knight::Knight(const Figures& figure,int x, int y, bool is_white)
     :Basic_figure(figure,x,y,is_white) {}
 
 
-void Knight::handle_move() {
-
-}
 
 void Knight::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_row, int current_col) {
     std::pair<int,int> new_index(current_row, current_col);

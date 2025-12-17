@@ -237,36 +237,30 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         int new_y_index = (pos.y() - start_y_pos) / 60;
 
 
-        // if (x == new_x_index && y == new_y_index) { // if you click to same figure twice
-        //     is_first_click = false;
-        // }
-
         //board[y][x]->x = pos.x()/60 * 60 - 20;
         //board[y][x]->y = pos.y()/60 * 60 + 10;
         // if(board[new_y_index][new_x_index]) { // if you move your piece to another piece
         //     is_first_click = false;
         // }
         auto it = index_pair_map.find(std::pair<int,int>(new_y_index,new_x_index));
-        //if(board[new_y_index][new_x_index]){
-            // if(board[y][x]->is_white != board[new_y_index][new_x_index]->is_white ) {
-            //     board[new_y_index][new_x_index].reset();
-            // }
         if(it != index_pair_map.end()) {
             if(it->second == Move_types::capture)
                 board[new_y_index][new_x_index].reset();
             else if(it->second == Move_types::short_castling) {
-                board[y][0]->x = coordinates_board[y][new_x_index+1].x();
 
-                board[y][0]->handle_move();
+                board[y][0]->handle_move(coordinates_board[y][new_x_index+1].x(), coordinates_board[y][new_x_index+1].y());
                 std::swap(board[y][0], board[y][new_x_index+1]);
+            }
 
+            else if(it->second == Move_types::long_castling) {
+                board[y][7]->handle_move(coordinates_board[y][new_x_index-1].x(), coordinates_board[y][new_x_index-1].y());
+                std::swap(board[y][7], board[y][new_x_index-1]);
             }
         }
 
         if(!board[new_y_index][new_x_index] && index_pair_map.contains(std::pair<int,int>(new_y_index,new_x_index))) {
-            board[y][x]->x = coordinates_board[new_y_index][new_x_index].x();
-            board[y][x]->y = coordinates_board[new_y_index][new_x_index].y();
-            board[y][x]->handle_move();
+
+            board[y][x]->handle_move(coordinates_board[new_y_index][new_x_index].x(), coordinates_board[new_y_index][new_x_index].y());
             is_white_turn_to_move = !is_white_turn_to_move;
             if((board[y][x]->what_figure() == Figures::white_king)) {
                 white_king_index.first = new_y_index;

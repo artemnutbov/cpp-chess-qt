@@ -6,9 +6,11 @@ Pawn::Pawn(const Figures& figure,int x, int y, bool is_white)
 
 
 
-void Pawn::handle_move() {
+void Pawn::handle_move(int x_pos, int y_pos) {
     if(is_in_start_pos)
         is_in_start_pos = false;
+    x = x_pos;
+    y = y_pos;
 }
 
 void Pawn::where_to_move(MoveMap& map,const ArrayBoard& board

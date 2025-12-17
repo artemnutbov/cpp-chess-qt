@@ -7,9 +7,11 @@ bool Rook::is_in_start_position()const {
     return is_in_start_pos;
 }
 
-void Rook::handle_move() {
+void Rook::handle_move(int x_pos, int y_pos) {
     if(is_in_start_pos)
         is_in_start_pos = false;
+    x = x_pos;
+    y = y_pos;
 }
 
 void Rook::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_i, int current_j) {
