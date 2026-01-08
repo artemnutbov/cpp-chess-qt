@@ -1,17 +1,16 @@
 #include "rook.h"
 
-Rook::Rook(const Figures& figure,int x, int y, bool is_white)
-    :Basic_figure(figure,x,y,is_white), is_in_start_pos(true) {}
+Rook::Rook(const Figures& figure,  bool is_white)
+    :Basic_figure(figure, is_white), is_in_start_pos(true) {}
 
 bool Rook::is_in_start_position()const {
     return is_in_start_pos;
 }
 
-void Rook::handle_move(int x_pos, int y_pos) {
+void Rook::handle_move() {
     if(is_in_start_pos)
         is_in_start_pos = false;
-    x = x_pos;
-    y = y_pos;
+
 }
 
 void Rook::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_i, int current_j) {

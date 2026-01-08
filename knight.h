@@ -4,10 +4,10 @@
 
 class Knight: public  Basic_figure {
 public:
-    Knight(const Figures& figure, int x, int y, bool is_white);
+    Knight(const Figures& ,bool );
 
     void where_to_move(MoveMap& ,const ArrayBoard& , int , int , bool ) override;
-   // virtual void handle_move() override;
+
 private:
     void move_for_both_sides(MoveMap& , const ArrayBoard& ,int , int );
 

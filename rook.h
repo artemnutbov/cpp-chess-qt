@@ -4,10 +4,10 @@
 class Rook: public virtual Basic_figure {
 public:
 
-    Rook(const Figures& figure, int x, int y, bool is_white);
+    Rook(const Figures&,  bool );
 
     void where_to_move(MoveMap& ,const ArrayBoard& , int , int , bool ) override;
-    virtual void handle_move(int, int) override;
+    virtual void handle_move() override;
     bool is_in_start_position()const;
 protected:
     void move_for_both_sides(MoveMap& , const ArrayBoard& ,int , int );

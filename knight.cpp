@@ -1,8 +1,8 @@
 #include "knight.h"
 
 
-Knight::Knight(const Figures& figure,int x, int y, bool is_white)
-    :Basic_figure(figure,x,y,is_white) {}
+Knight::Knight(const Figures& figure, bool is_white)
+    :Basic_figure(figure,is_white) {}
 
 
 

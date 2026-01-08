@@ -1,19 +1,13 @@
 #include "king.h"
 #include "rook.h"
 
-King::King(const Figures& figure,int x, int y, bool is_white)
-    :Basic_figure(figure,x,y,is_white), is_in_start_pos(true) {}
+King::King(const Figures& figure, bool is_white)
+    :Basic_figure(figure,is_white), is_in_start_pos(true) {}
 
 
-// Don't know how to realize check, castling , and when figure is pinned and thing where piece in protect you can't capture by king
-
-// the solution is save all moves for all figures(that only one i create now mb later thinks another solution)
-// solution above is bad i figure it out and king is the super figure(like queen) and checks if it can go to square
-void King::handle_move(int x_pos, int y_pos) {
+void King::handle_move() {
     if(is_in_start_pos)
         is_in_start_pos = false;
-    x = x_pos;
-    y = y_pos;
 }
 
 

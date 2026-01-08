@@ -1,16 +1,14 @@
 #include "pawn.h"
 
 
-Pawn::Pawn(const Figures& figure,int x, int y, bool is_white)
-    :Basic_figure(figure,x,y,is_white),is_in_start_pos(true) {}
+Pawn::Pawn(const Figures& figure, bool is_white)
+    :Basic_figure(figure, is_white),is_in_start_pos(true) {}
 
 
 
-void Pawn::handle_move(int x_pos, int y_pos) {
+void Pawn::handle_move() {
     if(is_in_start_pos)
         is_in_start_pos = false;
-    x = x_pos;
-    y = y_pos;
 }
 
 void Pawn::where_to_move(MoveMap& map,const ArrayBoard& board

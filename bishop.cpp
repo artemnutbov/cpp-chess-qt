@@ -1,7 +1,7 @@
 #include "bishop.h"
 
-Bishop::Bishop(const Figures& figure,int x, int y, bool is_white)
-    :Basic_figure(figure,x,y,is_white) {}
+Bishop::Bishop(const Figures& figure, bool is_white)
+    :Basic_figure(figure,is_white) {}
 
 
 

@@ -1,6 +1,6 @@
 #ifndef BASIC_FIGURE_H
 #define BASIC_FIGURE_H
-#include <QMainWindow>
+
 #include <boost/unordered/unordered_flat_map.hpp>
 
 struct PairHash {
@@ -28,16 +28,14 @@ protected:
 
 public:
 
-    int x;
-    int y;
+
     bool is_white;
     virtual ~Basic_figure() = default;
-    virtual void draw(QPainter&,const QPixmap&  );
-    Basic_figure(const Figures& figure, int x, int y,bool is_white);
+    Basic_figure(const Figures&, bool);
     virtual Figures what_figure()const;
     virtual void where_to_move(MoveMap& map,const std::array<std::array<std::unique_ptr<Basic_figure>,8>,8>& board
                                ,int current_i, int current_j,bool is_white_turn_to_move) = 0;
-    virtual void handle_move(int , int);
+    virtual void handle_move();
 };
 
 using ArrayBoard = std::array<std::array<std::unique_ptr<Basic_figure>,8>,8>;

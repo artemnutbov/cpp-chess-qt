@@ -3,11 +3,11 @@
 #include "Basic_figure.h"
 class King:public Basic_figure {
 public:
-    King(const Figures& figure, int x, int y, bool is_white);
+    King(const Figures& , bool );
 
     void where_to_move(MoveMap& ,const ArrayBoard& , int , int , bool ) override;
     bool is_king_under_attack(const ArrayBoard& , int , int);
-    virtual void handle_move(int, int) override;
+    virtual void handle_move() override;
 private:
 
     bool is_attacked_by_pawn(const ArrayBoard& ,int, int);

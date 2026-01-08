@@ -1,7 +1,7 @@
 #include "queen.h"
 
-Queen::Queen(const Figures& figure,int x, int y, bool is_white)
-    :Basic_figure(figure,x,y,is_white), Rook(figure,x,y,is_white), Bishop(figure,x,y,is_white) {}
+Queen::Queen(const Figures& figure, bool is_white)
+    :Basic_figure(figure, is_white), Rook(figure, is_white), Bishop(figure, is_white) {}
 
 
 

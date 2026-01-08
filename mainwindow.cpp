@@ -2,24 +2,14 @@
 #include "./ui_mainwindow.h"
 #include <QPainter>
 #include <QDebug>
-#include <QPoint>
-#include "pawn.h"
 #include <QPainterPath>
-#include "queen.h"
-#include "knight.h"
-#include "king.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow), x(0), y(0), start_x_pos(100), start_y_pos(70), cell_size(60), black_king_index(7, 3), white_king_index(0, 3)
+    , ui(new Ui::MainWindow), x(0), y(0), start_x_pos(100), start_y_pos(70), cell_size(60)
 {
     ui->setupUi(this);
     set_up_images();
-    for(size_t i = 0;i < 8;++i) {
-        for(size_t j = 0;j < 8;++j){
-            board[i][j] = nullptr;
-        }
-    }
     set_up();
 
 }
@@ -62,35 +52,8 @@ void MainWindow::set_up() {
             coordinates_board[i][j] = QPoint(start_x_pos+cell_size*j,start_y_pos+cell_size*i);
         }
     }
+    board.set_up();
 
-
-    board[0][2] = std::make_unique<Bishop>(Figures::white_bishop,start_x_pos+2*cell_size,start_y_pos,true);
-    board[0][5] = std::make_unique<Bishop>(Figures::white_bishop,start_x_pos+5*cell_size,start_y_pos,true);
-
-    board[0][1] = std::make_unique<Knight>(Figures::white_knight,start_x_pos+1*cell_size,start_y_pos,true);
-    board[0][6] = std::make_unique<Knight>(Figures::white_knight,start_x_pos+6*cell_size,start_y_pos,true);
-    board[0][0] = std::make_unique<Rook>(Figures::white_rook,start_x_pos,start_y_pos,true);
-    board[0][7] = std::make_unique<Rook>(Figures::white_rook,start_x_pos+7*cell_size,start_y_pos,true);
-    board[0][3] = std::make_unique<King>(Figures::white_king,start_x_pos+3*cell_size,start_y_pos,true);
-    board[0][4] = std::make_unique<Queen>(Figures::white_queen,start_x_pos+4*cell_size,start_y_pos,true);
-
-    board[7][0] = std::make_unique<Rook>(Figures::black_rook,start_x_pos,start_y_pos+ cell_size * 7,false);
-    board[7][7] = std::make_unique<Rook>(Figures::black_rook,start_x_pos+7*cell_size,start_y_pos+ cell_size * 7,false);
-
-
-
-    board[7][2] = std::make_unique<Bishop>(Figures::black_bishop,start_x_pos+2*cell_size,start_y_pos + cell_size * 7,false);
-    board[7][5] = std::make_unique<Bishop>(Figures::black_bishop,start_x_pos+5*cell_size,start_y_pos + cell_size * 7,false);
-
-    board[7][1] = std::make_unique<Knight>(Figures::black_knight,start_x_pos+1*cell_size,start_y_pos + cell_size * 7,false);
-    board[7][6] = std::make_unique<Knight>(Figures::black_knight,start_x_pos+6*cell_size,start_y_pos + cell_size * 7,false);
-    board[7][3] = std::make_unique<King>(Figures::black_king,start_x_pos+3*cell_size,start_y_pos + cell_size * 7,false);
-    board[7][4] = std::make_unique<Queen>(Figures::black_queen,start_x_pos+4*cell_size,start_y_pos + cell_size * 7,false);
-
-    for(size_t i = 0;i<8;++i) {
-        board[1][i] = std::make_unique<Pawn>(Figures::white_pawn,start_x_pos+i*cell_size,start_y_pos+ cell_size,true);
-        board[6][i] = std::make_unique<Pawn>(Figures::black_pawn,start_x_pos+i*cell_size,start_y_pos + cell_size * 6,false);
-    }
 
 }
 void MainWindow::paintEvent(QPaintEvent *)
@@ -136,7 +99,7 @@ void MainWindow::paintEvent(QPaintEvent *)
         int cicle_thickness = 6;
         QPainterPath path;
         p.setBrush(my_transparent_black);
-        for(const auto& it : index_pair_map) {
+        for(const auto& it : board.all_legal_moves()) {
             QPointF center_of_cell(it.first.second*cell_size + start_x_pos + half_cell_size ,it.first.first*cell_size + half_cell_size +  start_y_pos);
 
             if(it.second == Move_types::capture){ // idk problem with drawing that circle same transparent color
@@ -148,42 +111,17 @@ void MainWindow::paintEvent(QPaintEvent *)
             }
             else
                p.drawEllipse(center_of_cell , circle_radius, circle_radius);
-            //p.drawEllipse(center_of_cell , half_cell_size, half_cell_size);
         }
 
     }
 
     for(size_t i = 0;i < 8;++i) {
         for(size_t j = 0;j < 8;++j){
-            if(board[i][j]) {
-                board[i][j]->draw(p,images_map[board[i][j]->what_figure()]);
-            }
+
+            if(board.valid_index(i,j))
+                p.drawPixmap(coordinates_board[i][j].x(), coordinates_board[i][j].y(),images_map[board.what_figure_index(i,j)]);
         }
     }
-
-    // if(is_first_click) { // hint how figures move
-    //     QColor my_transparent_black(0,0,0, 40);
-    //     p.setBrush(my_transparent_black);
-    //     int circle_radius = cell_size/6;
-    //     int half_cell_size = cell_size/2;
-    //     int cicle_thickness = 6;
-    //     QPainterPath path;
-
-    //     for(const auto& it : index_pair_map) {
-    //         QPointF center_of_cell(it.first.second*cell_size + start_x_pos + half_cell_size ,it.first.first*cell_size + half_cell_size +  start_y_pos);
-    //         if(it.second){
-    //             path.addEllipse(center_of_cell,half_cell_size,half_cell_size);
-    //             path.addEllipse(center_of_cell,half_cell_size-cicle_thickness,half_cell_size-cicle_thickness);
-    //             path.setFillRule(Qt::OddEvenFill);
-    //             p.drawPath(path);
-    //         }
-    //         else
-    //             p.drawEllipse(center_of_cell , circle_radius, circle_radius);
-    //     }
-
-    //     //p.setRenderHint(QPainter::Antialiasing, true); // if enable circle and diagonal lines looks better but costs performance
-    // }
-
 
 }
 
@@ -200,80 +138,17 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         is_first_click = true;
         x = (pos.x() - start_x_pos) / 60;
         y = (pos.y() - start_y_pos) / 60;
-        if(!board[y][x])
+        if(!board.valid_index(y,x))
             is_first_click = false;
         else {
-            if(!index_pair_map.empty()) // !!! don't sure maybe wrong place!!!
-                index_pair_map.clear();
-            board[y][x]->where_to_move(index_pair_map,board, y,x,is_white_turn_to_move);
-
-            if((board[y][x]->what_figure() != Figures::black_king) && (board[y][x]->what_figure() != Figures::white_king)) {
-                std::pair<int, int> king_index = (is_white_turn_to_move) ? white_king_index : black_king_index;
-                for(const auto& it : index_pair_map) {
-                    if(it.second == Move_types::capture){
-                        std::unique_ptr<Basic_figure> tmp = std::move(board[it.first.first][it.first.second]);
-                        std::swap(board[y][x], board[it.first.first][it.first.second]);
-                        bool is_in_check = static_cast<King*>(board[king_index.first][king_index.second].get())->is_king_under_attack(board, king_index.first, king_index.second);
-                        std::swap(board[y][x], board[it.first.first][it.first.second]);
-                        board[it.first.first][it.first.second] = std::move(tmp);
-                        if(is_in_check)
-                            index_pair_map.erase(it.first);
-
-                    }
-                    else {
-                        std::swap(board[y][x], board[it.first.first][it.first.second]);
-                        bool is_in_check = static_cast<King*>(board[king_index.first][king_index.second].get())->is_king_under_attack(board, king_index.first, king_index.second);
-                        std::swap(board[y][x], board[it.first.first][it.first.second]);
-                        if(is_in_check)
-                            index_pair_map.erase(it.first);
-
-                    }
-                }
-            }
+            board.all_figure_move(x,y);
         }
     }
     else{
         int new_x_index = (pos.x() - start_x_pos) / 60;
         int new_y_index = (pos.y() - start_y_pos) / 60;
 
-
-        //board[y][x]->x = pos.x()/60 * 60 - 20;
-        //board[y][x]->y = pos.y()/60 * 60 + 10;
-        // if(board[new_y_index][new_x_index]) { // if you move your piece to another piece
-        //     is_first_click = false;
-        // }
-        auto it = index_pair_map.find(std::pair<int,int>(new_y_index,new_x_index));
-        if(it != index_pair_map.end()) {
-            if(it->second == Move_types::capture)
-                board[new_y_index][new_x_index].reset();
-            else if(it->second == Move_types::short_castling) {
-
-                board[y][0]->handle_move(coordinates_board[y][new_x_index+1].x(), coordinates_board[y][new_x_index+1].y());
-                std::swap(board[y][0], board[y][new_x_index+1]);
-            }
-
-            else if(it->second == Move_types::long_castling) {
-                board[y][7]->handle_move(coordinates_board[y][new_x_index-1].x(), coordinates_board[y][new_x_index-1].y());
-                std::swap(board[y][7], board[y][new_x_index-1]);
-            }
-        }
-
-        if(!board[new_y_index][new_x_index] && index_pair_map.contains(std::pair<int,int>(new_y_index,new_x_index))) {
-
-            board[y][x]->handle_move(coordinates_board[new_y_index][new_x_index].x(), coordinates_board[new_y_index][new_x_index].y());
-            is_white_turn_to_move = !is_white_turn_to_move;
-            if((board[y][x]->what_figure() == Figures::white_king)) {
-                white_king_index.first = new_y_index;
-                white_king_index.second = new_x_index;
-
-            }
-            else if((board[y][x]->what_figure() == Figures::black_king)){
-                black_king_index.first = new_y_index;
-                black_king_index.second = new_x_index;
-            }
-            std::swap(board[y][x],board[new_y_index][new_x_index]);
-        }
-
+        board.action_move(x, y, new_x_index, new_y_index);
 
         is_first_click = false;
     }
