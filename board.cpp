@@ -3,37 +3,38 @@
 #include "queen.h"
 #include "knight.h"
 #include "king.h"
+#include <QDebug>
 
-Board::Board():black_king_index(7, 3), white_king_index(0, 3) {}
+Board::Board():black_king_index(7, 3), white_king_index(0, 3),game_result_status(Game_Result_Status::Not_Started) {}
 
 void Board::set_up(){
+    game_result_status = Game_Result_Status::Playing_Now;
+    // board[0][2] = std::make_unique<Bishop>(Figures::white_bishop,true);
+    // board[0][5] = std::make_unique<Bishop>(Figures::white_bishop,true);
 
-    board[0][2] = std::make_unique<Bishop>(Figures::white_bishop,true);
-    board[0][5] = std::make_unique<Bishop>(Figures::white_bishop,true);
-
-    board[0][1] = std::make_unique<Knight>(Figures::white_knight,true);
-    board[0][6] = std::make_unique<Knight>(Figures::white_knight,true);
-    board[0][0] = std::make_unique<Rook>(Figures::white_rook,true);
-    board[0][7] = std::make_unique<Rook>(Figures::white_rook,true);
+    // board[0][1] = std::make_unique<Knight>(Figures::white_knight,true);
+    // board[0][6] = std::make_unique<Knight>(Figures::white_knight,true);
+    // board[0][0] = std::make_unique<Rook>(Figures::white_rook,true);
+    // board[0][7] = std::make_unique<Rook>(Figures::white_rook,true);
     board[0][3] = std::make_unique<King>(Figures::white_king,true);
-    board[0][4] = std::make_unique<Queen>(Figures::white_queen,true);
+    // board[0][4] = std::make_unique<Queen>(Figures::white_queen,true);
 
-    board[7][0] = std::make_unique<Rook>(Figures::black_rook,false);
-    board[7][7] = std::make_unique<Rook>(Figures::black_rook,false);
+    // board[7][0] = std::make_unique<Rook>(Figures::black_rook,false);
+    // board[7][7] = std::make_unique<Rook>(Figures::black_rook,false);
 
 
 
-    board[7][2] = std::make_unique<Bishop>(Figures::black_bishop,false);
-    board[7][5] = std::make_unique<Bishop>(Figures::black_bishop,false);
+    //board[7][2] = std::make_unique<Bishop>(Figures::black_bishop,false);
+    //board[7][5] = std::make_unique<Bishop>(Figures::black_bishop,false);
 
-    board[7][1] = std::make_unique<Knight>(Figures::black_knight,false);
-    board[7][6] = std::make_unique<Knight>(Figures::black_knight,false);
+  //  board[7][1] = std::make_unique<Knight>(Figures::black_knight,false);
+//    board[7][6] = std::make_unique<Knight>(Figures::black_knight,false);
     board[7][3] = std::make_unique<King>(Figures::black_king,false);
     board[7][4] = std::make_unique<Queen>(Figures::black_queen,false);
 
     for(size_t i = 0;i<8;++i) {
-        board[1][i] = std::make_unique<Pawn>(Figures::white_pawn,true);
-        board[6][i] = std::make_unique<Pawn>(Figures::black_pawn,false);
+        //board[1][i] = std::make_unique<Pawn>(Figures::white_pawn,true);
+        //board[6][i] = std::make_unique<Pawn>(Figures::black_pawn,false);
     }
 }
 
@@ -116,4 +117,38 @@ void Board::action_move(int x, int y, int new_x_index, int new_y_index) {
         }
         std::swap(board[y][x],board[new_y_index][new_x_index]);
     }
+
+    //  test try to implement checkmate
+    if(!index_pair_map.empty())
+        index_pair_map.clear();
+    std::pair<int, int> king_index = (is_white_turn_to_move) ? white_king_index : black_king_index;
+    bool is_in_check = static_cast<King*>(board[king_index.first][king_index.second].get())->is_king_under_attack(board, king_index.first, king_index.second);
+
+
+    game_result_status = Game_Result_Status::Stalemate;
+    for(size_t i = 0;i < 8;++i) {
+        for(size_t j = 0;j < 8;++j){
+            if(board[i][j] && board[i][j]->is_white_figure() == is_white_turn_to_move) {
+                all_figure_move(j,i);
+                if(!index_pair_map.empty()) {
+                    game_result_status = Game_Result_Status::Playing_Now;
+                    break;
+                }
+            }
+        }
+    }
+    if(is_in_check && game_result_status ==  Game_Result_Status::Stalemate) {
+        if(is_white_turn_to_move){
+            game_result_status = Game_Result_Status::Black_win;
+            qDebug() << "checkmate for white!!!!!!!";
+        }
+        else {
+            game_result_status = Game_Result_Status::White_win;
+            qDebug() << "checkmate for black!!!!!!!";
+
+        }
+    }
+    else if(game_result_status ==  Game_Result_Status::Stalemate)
+         qDebug() << "Stalemate !!!!!!!";
+
 }

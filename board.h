@@ -4,6 +4,10 @@
 #include <array>
 #include <memory>
 
+enum class Game_Result_Status {
+    White_win, Black_win, Stalemate, Playing_Now , Not_Started
+};
+
 
 class Board {
     std::pair<int,int> black_king_index;
@@ -11,6 +15,7 @@ class Board {
     bool is_white_turn_to_move = true;
     std::array<std::array<std::unique_ptr<Basic_figure>,8>,8> board;
     MoveMap index_pair_map;
+    Game_Result_Status game_result_status;
 public:
     void set_up();
     void all_figure_move(int, int);

@@ -12,6 +12,9 @@ void Basic_figure::handle_move() {
 
 }
 
+bool Basic_figure::is_white_figure() const{
+    return is_white;
+}
 
 #endif // BASIC_FIGURE_CPP
 

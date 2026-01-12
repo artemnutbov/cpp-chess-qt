@@ -13,7 +13,7 @@ void King::handle_move() {
 
 bool King::is_king_under_attack(const ArrayBoard& board, int current_row, int current_col) { // need to rewrite bcs it is awful to take 2 int instead of  std::pair
     if(is_attacked_by_knight(board, current_row, current_col) || is_attacked_by_bishop(board, current_row, current_col)
-        || is_attacked_by_rook(board, current_row, current_col) || is_attacked_by_pawn(board, current_row, current_col))
+        || is_attacked_by_rook(board, current_row, current_col) || is_attacked_by_pawn(board, current_row, current_col) || is_enemy_king_close(board,  current_row, current_col))
         return true;
     return false;
 }
@@ -34,7 +34,7 @@ bool King::where_is_pawn(const ArrayBoard& board, std::pair<int,int> index, bool
     if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
         if(!board[index.first][index.second])
             return false;
-        else if(board[index.first][index.second]->is_white != is_white &&
+        else if(board[index.first][index.second]->is_white_figure() != is_white &&
                  (board[index.first][index.second]->what_figure() == Figures::white_pawn ||  board[index.first][index.second]->what_figure() == Figures::black_pawn)) {
             return true;
         }
@@ -68,7 +68,7 @@ bool King::where_is_knight(const ArrayBoard& board, std::pair<int,int> index, in
     if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
         if(!board[index.first][index.second])
             return false;
-        else if(board[index.first][index.second]->is_white != is_white &&
+        else if(board[index.first][index.second]->is_white_figure() != is_white &&
                  (board[index.first][index.second]->what_figure() == Figures::white_knight ||  board[index.first][index.second]->what_figure() == Figures::black_knight)) {
             return true;
         }
@@ -124,7 +124,7 @@ bool King::where_is_bishop(const ArrayBoard& board, std::pair<int,int> index
         }
 
 
-        if(board[index.first][index.second]->is_white != is_white && (is_attacked_by == Figures::white_bishop || is_attacked_by == Figures::black_bishop
+        if(board[index.first][index.second]->is_white_figure() != is_white && (is_attacked_by == Figures::white_bishop || is_attacked_by == Figures::black_bishop
                                                                        || is_attacked_by == Figures::black_queen || is_attacked_by == Figures::white_queen )) {
             return true;
         }
@@ -171,7 +171,7 @@ bool King::where_is_rook(const ArrayBoard& board,std::pair<int,int> new_index, C
                 continue;
             }
         }
-        if(board[new_index.first][new_index.second]->is_white != is_white && (is_attacked_by == Figures::white_rook || is_attacked_by == Figures::black_rook
+        if(board[new_index.first][new_index.second]->is_white_figure() != is_white && (is_attacked_by == Figures::white_rook || is_attacked_by == Figures::black_rook
             || is_attacked_by == Figures::black_queen || is_attacked_by == Figures::white_queen)) {
             return true;
         }
@@ -182,6 +182,23 @@ bool King::where_is_rook(const ArrayBoard& board,std::pair<int,int> new_index, C
     return false;
 }
 
+bool King::is_enemy_king_close(const ArrayBoard& board, int current_row, int current_col) {
+    for(int i = -1; i < 2;++i) {
+        for(int j = -1; j < 2;++j) {
+            if(i == 0 && j == 0)
+                continue;
+            std::pair<int,int> index(current_row+i, current_col+j);
+            if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
+                Figures enemy_king = is_white ? Figures::black_king : Figures::white_king;
+                if(board[index.first][index.second] && board[index.first][index.second]->what_figure() == enemy_king )
+                    return true;
+
+            }
+        }
+    }
+
+    return false;
+}
 
 void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int current_row, int current_col) {
     for(int i = -1; i < 2;++i) {
@@ -190,7 +207,7 @@ void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int curren
                 continue;
             std::pair<int,int> index(current_row+i, current_col+j);
             if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
-                if(board[index.first][index.second] && board[index.first][index.second]->is_white == is_white )
+                if(board[index.first][index.second] && board[index.first][index.second]->is_white_figure() == is_white )
                     continue;
                 bool can_move = is_king_under_attack(board, index.first, index.second);
 
@@ -199,7 +216,7 @@ void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int curren
                         map.insert(IndexPair(index, Move_types::move_to_empty_square));
                     continue;
                 }
-                else if(board[index.first][index.second]->is_white != is_white && !can_move ) {
+                else if(board[index.first][index.second]->is_white_figure() != is_white && !can_move ) {
                     map.insert(IndexPair(index, Move_types::capture));
                 }
             }

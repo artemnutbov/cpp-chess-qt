@@ -27,12 +27,12 @@ void Pawn::where_to_move(MoveMap& map,const ArrayBoard& board
 
         new_index.second+=1;
         if(board[new_index.first][new_index.second] && new_index.second < 8 ) {
-            if(board[new_index.first][new_index.second]->is_white != is_white )
+            if(board[new_index.first][new_index.second]->is_white_figure() != is_white )
                 map.insert(IndexPair(new_index, Move_types::capture));
         }
         new_index.second-=2;
         if(board[new_index.first][new_index.second] && new_index.second >= 0  ) {
-            if(board[new_index.first][new_index.second]->is_white != is_white )
+            if(board[new_index.first][new_index.second]->is_white_figure() != is_white )
                 map.insert(IndexPair(new_index, Move_types::capture));
         }
         // !!! need to handle last pos pawn(promote to any figure)
@@ -51,12 +51,12 @@ void Pawn::where_to_move(MoveMap& map,const ArrayBoard& board
 
         ++new_index.second;
         if(board[new_index.first][new_index.second] && new_index.second < 8 ) {
-            if(board[new_index.first][new_index.second]->is_white != is_white )
+            if(board[new_index.first][new_index.second]->is_white_figure() != is_white )
                 map.insert(IndexPair(new_index, Move_types::capture));
         }
         new_index.second-=2;
         if(board[new_index.first][new_index.second] && new_index.second >= 0  ) {
-            if(board[new_index.first][new_index.second]->is_white != is_white )
+            if(board[new_index.first][new_index.second]->is_white_figure() != is_white )
                 map.insert(IndexPair(new_index, Move_types::capture));
         }
     }

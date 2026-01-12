@@ -22,6 +22,8 @@ private:
     bool is_attacked_by_rook(const ArrayBoard&, int, int);
     template <typename Comp>
     bool where_is_rook(const ArrayBoard&, std::pair<int,int>, Comp, bool, bool);
+
+    bool is_enemy_king_close(const ArrayBoard&, int, int);
 private:
     void move_for_both_sides(MoveMap& ,const ArrayBoard&, int, int);
     bool is_in_start_pos;

@@ -25,11 +25,11 @@ enum class Figures {
 class Basic_figure {
 protected:
     Figures figure;
+    bool is_white;
 
 public:
 
-
-    bool is_white;
+    bool is_white_figure()const;
     virtual ~Basic_figure() = default;
     Basic_figure(const Figures&, bool);
     virtual Figures what_figure()const;
