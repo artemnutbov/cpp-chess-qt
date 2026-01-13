@@ -38,6 +38,7 @@ private:
     void set_up();
     void set_up_images();
     QPixmap create_image(const char* path,bool is_white);
+    void result_drawing(QPainter& );
 protected:
     void paintEvent(QPaintEvent *) override;
     void mousePressEvent(QMouseEvent*) override;

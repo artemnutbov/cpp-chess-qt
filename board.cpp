@@ -16,12 +16,13 @@ void Board::set_up(){
     // board[0][6] = std::make_unique<Knight>(Figures::white_knight,true);
     // board[0][0] = std::make_unique<Rook>(Figures::white_rook,true);
     // board[0][7] = std::make_unique<Rook>(Figures::white_rook,true);
-    board[0][3] = std::make_unique<King>(Figures::white_king,true);
+    //board[0][3] = std::make_unique<King>(Figures::white_king,true);
     // board[0][4] = std::make_unique<Queen>(Figures::white_queen,true);
 
     // board[7][0] = std::make_unique<Rook>(Figures::black_rook,false);
     // board[7][7] = std::make_unique<Rook>(Figures::black_rook,false);
 
+    board[7][0] = std::make_unique<King>(Figures::white_king,true);
 
 
     //board[7][2] = std::make_unique<Bishop>(Figures::black_bishop,false);
@@ -38,12 +39,20 @@ void Board::set_up(){
     }
 }
 
+const std::pair<int,int>& Board::king_index(bool is_white)const {
+    return is_white ? white_king_index : black_king_index;
+}
+
 bool Board::valid_index(int i, int j) {
     if(board[i][j])
         return true;
     return  false;
 }
 
+
+Game_Result_Status Board::what_game_state()const {
+    return game_result_status;
+}
 
 Figures Board::what_figure_index(int i, int j) {
     return board[i][j]->what_figure();

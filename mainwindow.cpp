@@ -56,6 +56,47 @@ void MainWindow::set_up() {
 
 
 }
+void MainWindow::result_drawing(QPainter& p) {
+    int circle_result_radius = 18;
+    QPoint white_king_coordinates(coordinates_board[board.king_index(true).first][board.king_index(true).second]);
+    QPoint black_king_coordinates(coordinates_board[board.king_index(false).first][board.king_index(false).second]);
+    switch (board.what_game_state()) {
+    case Game_Result_Status::Stalemate: {
+        QColor my_transparent_gray(85,85,85, 230);
+        p.setBrush(my_transparent_gray);
+        p.drawEllipse(white_king_coordinates, circle_result_radius, circle_result_radius);
+        p.drawEllipse(black_king_coordinates, circle_result_radius, circle_result_radius);
+        break;
+    }
+    case Game_Result_Status::White_win:{
+        QColor my_transparent_salad_green (131,184,79, 230);
+        QColor my_transparent_light_red(224,40,40, 230);
+
+        p.setBrush(my_transparent_salad_green);
+        p.drawEllipse(white_king_coordinates, circle_result_radius, circle_result_radius);
+        p.setBrush(my_transparent_light_red);
+        p.drawEllipse(black_king_coordinates, circle_result_radius, circle_result_radius);
+
+        break;
+    }
+
+    case Game_Result_Status::Black_win:{
+        QColor my_transparent_salad_green (131,184,79, 230);
+        QColor my_transparent_light_red(224,40,40, 230);
+
+        p.setBrush(my_transparent_light_red);
+        p.drawEllipse(white_king_coordinates, circle_result_radius, circle_result_radius);
+
+        p.setBrush(my_transparent_salad_green);
+        p.drawEllipse(black_king_coordinates, circle_result_radius, circle_result_radius);
+
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 void MainWindow::paintEvent(QPaintEvent *)
 {
     // draw board
@@ -85,6 +126,8 @@ void MainWindow::paintEvent(QPaintEvent *)
                 p.drawRect(coordinates_board[i*2][j].x(),coordinates_board[i*2][j].y(), cell_size, cell_size);
         }
     }
+    if(board.what_game_state() != Game_Result_Status::Playing_Now)
+        result_drawing(p);
 
     if(is_first_click) { // demo of on what figure you click
         QColor my_transparent_yellow(245,246,130,160);
@@ -117,17 +160,18 @@ void MainWindow::paintEvent(QPaintEvent *)
 
     for(size_t i = 0;i < 8;++i) {
         for(size_t j = 0;j < 8;++j){
-
             if(board.valid_index(i,j))
                 p.drawPixmap(coordinates_board[i][j].x(), coordinates_board[i][j].y(),images_map[board.what_figure_index(i,j)]);
         }
     }
 
+
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
     // check for click
-
+    if(board.what_game_state() != Game_Result_Status::Playing_Now)
+        return;
     QPoint pos = event->pos();
     QRect area(start_x_pos,start_y_pos,cell_size*8,cell_size*8);
     if(!area.contains(pos)) {

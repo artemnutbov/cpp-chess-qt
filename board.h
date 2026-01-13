@@ -23,6 +23,8 @@ public:
     bool valid_index(int, int);
     Figures what_figure_index(int, int);
     MoveMap& all_legal_moves();
+    Game_Result_Status what_game_state()const;
+    const std::pair<int,int>& king_index(bool)const;
     Board();
 };
 
