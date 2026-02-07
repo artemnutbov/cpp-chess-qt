@@ -11,25 +11,26 @@ void King::handle_move() {
 }
 
 
-bool King::is_king_under_attack(const ArrayBoard& board, int current_row, int current_col) { // need to rewrite bcs it is awful to take 2 int instead of  std::pair
+bool King::is_king_under_attack(const ArrayBoard& board, int current_row, int current_col,bool is_white_pov) { // need to rewrite bcs it is awful to take 2 int instead of  std::pair
     if(is_attacked_by_knight(board, current_row, current_col) || is_attacked_by_bishop(board, current_row, current_col)
-        || is_attacked_by_rook(board, current_row, current_col) || is_attacked_by_pawn(board, current_row, current_col) || is_enemy_king_close(board,  current_row, current_col))
+        || is_attacked_by_rook(board, current_row, current_col) || is_attacked_by_pawn(board, current_row, current_col, is_white_pov) || is_enemy_king_close(board,  current_row, current_col))
         return true;
     return false;
 }
 
-bool King::is_attacked_by_pawn(const ArrayBoard& board,int current_row, int current_col) {
+bool King::is_attacked_by_pawn(const ArrayBoard& board,int current_row, int current_col, bool is_white_pov) {
     std::pair<int,int> new_index(current_row, current_col);
 
-    if(where_is_pawn(board, new_index, true) || where_is_pawn(board, new_index,  false) )
+    if(where_is_pawn(board, new_index, true, is_white_pov) || where_is_pawn(board, new_index,  false, is_white_pov))
         return true;
 
     return false;
 }
 
-bool King::where_is_pawn(const ArrayBoard& board, std::pair<int,int> index, bool is_left_attack) {
+bool King::where_is_pawn(const ArrayBoard& board, std::pair<int,int> index, bool is_left_attack, bool is_white_pov) {
+    bool is_go_up = is_white ?  is_white_pov : !is_white_pov;
     index.second += (is_left_attack) ? 1 : -1;
-    index.first += (is_white) ?  1  : -1;
+    index.first += (is_go_up) ?  -1  : 1;
 
     if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
         if(!board[index.first][index.second])
@@ -200,7 +201,7 @@ bool King::is_enemy_king_close(const ArrayBoard& board, int current_row, int cur
     return false;
 }
 
-void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int current_row, int current_col) {
+void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int current_row, int current_col,bool is_white_pov) {
     for(int i = -1; i < 2;++i) {
         for(int j = -1; j < 2;++j) {
             if(i == 0 && j == 0)
@@ -209,7 +210,7 @@ void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int curren
             if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
                 if(board[index.first][index.second] && board[index.first][index.second]->is_white_figure() == is_white )
                     continue;
-                bool can_move = is_king_under_attack(board, index.first, index.second);
+                bool can_move = is_king_under_attack(board, index.first, index.second, is_white_pov);
 
                 if(!board[index.first][index.second]){
                     if(!can_move)
@@ -228,8 +229,8 @@ void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int curren
 
     if(is_in_start_pos && board[current_row][0] && board[current_row][0]->what_figure() == rook) {
         if(!board[current_row][current_col - 1] && !board[current_row][current_col - 2]) {
-            if(dynamic_cast<Rook*>(board[current_row][0].get())->is_in_start_position() && !is_king_under_attack(board, current_row, current_col)
-                &&  !is_king_under_attack(board, current_row, current_col - 1) && !is_king_under_attack(board, current_row, current_col - 2)) {
+            if(dynamic_cast<Rook*>(board[current_row][0].get())->is_in_start_position() && !is_king_under_attack(board, current_row, current_col, is_white_pov)
+                &&  !is_king_under_attack(board, current_row, current_col - 1, is_white_pov) && !is_king_under_attack(board, current_row, current_col - 2, is_white_pov)) {
                 map.insert(IndexPair(std::pair<int,int>(current_row, current_col - 2), Move_types::short_castling));
             }
         }
@@ -237,21 +238,17 @@ void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int curren
 
     if(is_in_start_pos && board[current_row][7] && board[current_row][7]->what_figure() == rook) {
         if(!board[current_row][current_col + 1] && !board[current_row][current_col + 2] && !board[current_row][current_col + 3]) {
-            if(dynamic_cast<Rook*>(board[current_row][0].get())->is_in_start_position() && !is_king_under_attack(board, current_row, current_col)
-                &&  !is_king_under_attack(board, current_row, current_col + 1) && !is_king_under_attack(board, current_row, current_col + 2)
-                && !is_king_under_attack(board, current_row, current_col + 3)) {
+            if(dynamic_cast<Rook*>(board[current_row][0].get())->is_in_start_position() && !is_king_under_attack(board, current_row, current_col, is_white_pov)
+                &&  !is_king_under_attack(board, current_row, current_col + 1,is_white_pov) && !is_king_under_attack(board, current_row, current_col + 2, is_white_pov)
+                && !is_king_under_attack(board, current_row, current_col + 3, is_white_pov)) {
                 map.insert(IndexPair(std::pair<int,int>(current_row, current_col + 2), Move_types::long_castling));
             }
         }
     }
 
 }
-void King::where_to_move(MoveMap& map, const ArrayBoard& board, int current_row, int current_col, bool is_white_turn_to_move) {
+void King::where_to_move(MoveMap& map, const ArrayBoard& board, int current_row, int current_col, bool is_white_pov) {
 
-    if(is_white && is_white_turn_to_move) {
-        move_for_both_sides(map, board, current_row, current_col);
-    }
-    else if(!is_white && !is_white_turn_to_move) {
-        move_for_both_sides(map, board, current_row, current_col);
-    }
+    move_for_both_sides(map, board, current_row, current_col,is_white_pov);
+
 }

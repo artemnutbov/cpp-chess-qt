@@ -52,11 +52,6 @@ void Bishop::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board, std:
 
 void Bishop::where_to_move(MoveMap& map, const ArrayBoard& board, int current_row, int current_col,bool is_white_turn_to_move) {
 
-    if(is_white && is_white_turn_to_move) {
-        move_for_both_sides(map, board, current_row, current_col);
+    move_for_both_sides(map, board, current_row, current_col);
 
-    }
-    else if(!is_white && !is_white_turn_to_move) {
-        move_for_both_sides(map, board, current_row, current_col);
-    }
 }

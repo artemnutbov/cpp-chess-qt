@@ -10,7 +10,7 @@ struct PairHash {
 };
 
 enum class Move_types {
-    move_to_empty_square, short_castling, long_castling, capture
+    move_to_empty_square, short_castling, long_castling, capture, promote_to_empty_square,  promote_and_capture
 };
 
 using IndexPair = std::pair<std::pair<int,int>,Move_types>;

@@ -6,16 +6,16 @@ public:
     King(const Figures& , bool );
 
     void where_to_move(MoveMap& ,const ArrayBoard& , int , int , bool ) override;
-    bool is_king_under_attack(const ArrayBoard& , int , int);
+    bool is_king_under_attack(const ArrayBoard& , int , int, bool);
     virtual void handle_move() override;
 private:
 
-    bool is_attacked_by_pawn(const ArrayBoard& ,int, int);
+    bool is_attacked_by_pawn(const ArrayBoard& ,int, int, bool);
     bool is_attacked_by_knight(const ArrayBoard& ,int, int);
     bool is_attacked_by_bishop(const ArrayBoard&, int, int);
     bool where_is_knight(const ArrayBoard&, std::pair<int,int>, int, int);
 
-    bool where_is_pawn(const ArrayBoard&, std::pair<int,int>, bool);
+    bool where_is_pawn(const ArrayBoard&, std::pair<int,int>, bool, bool);
     template <typename Comp>
     bool where_is_bishop(const ArrayBoard&, std::pair<int,int>, const Comp&, const Comp&, bool, bool);
 
@@ -25,7 +25,7 @@ private:
 
     bool is_enemy_king_close(const ArrayBoard&, int, int);
 private:
-    void move_for_both_sides(MoveMap& ,const ArrayBoard&, int, int);
+    void move_for_both_sides(MoveMap& ,const ArrayBoard&, int, int, bool);
     bool is_in_start_pos;
 
     void what_castling(MoveMap& ,const ArrayBoard&, int, int);

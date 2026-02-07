@@ -48,13 +48,7 @@ void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,std::pa
     }
 }
 
-void Rook::where_to_move(MoveMap& map, const ArrayBoard& board, int current_i, int current_j,bool is_white_turn_to_move) {
+void Rook::where_to_move(MoveMap& map, const ArrayBoard& board, int current_i, int current_j,bool ) {
 
-    if(is_white && is_white_turn_to_move) {
         move_for_both_sides(map, board, current_i, current_j);
-
-    }
-    else if(!is_white && !is_white_turn_to_move) {
-        move_for_both_sides(map, board, current_i, current_j);
-    }
 }
