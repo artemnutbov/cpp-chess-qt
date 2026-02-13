@@ -28,9 +28,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         resources.qrc
 
-        Basic_figure.cpp
-        Basic_figure.cpp
-        Basic_figure.h
+        BasicFigure.cpp
+        BasicFigure.cpp
+        BasicFigure.h
         rook.h rook.cpp
         pawn.h pawn.cpp
         bishop.h bishop.cpp
@@ -38,6 +38,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         knight.h knight.cpp
         king.h king.cpp
         board.h board.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET my_chess_game APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

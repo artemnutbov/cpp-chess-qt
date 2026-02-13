@@ -1,54 +1,46 @@
 #include "rook.h"
 
-Rook::Rook(const Figures& figure,  bool is_white)
-    :Basic_figure(figure, is_white), is_in_start_pos(true) {}
 
-bool Rook::is_in_start_position()const {
-    return is_in_start_pos;
-}
+void Rook::get_rook_moves(MoveMap& map,const ArrayBoard& board,int start_square) {
+    what_to_do_whith_figure(map, board, start_square, [](int i) { return (i >> 3) == 7; }, 8);
 
-void Rook::handle_move() {
-    if(is_in_start_pos)
-        is_in_start_pos = false;
+    what_to_do_whith_figure(map, board, start_square, [](int i) { return (i >> 3) == 0; }, -8);
 
-}
+    what_to_do_whith_figure(map, board, start_square, [](int i) { return (i & 7) == 7; }, 1);
 
-void Rook::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_i, int current_j) {
-    std::pair<int,int> new_index(current_i, current_j);
-
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i < 8; }, true, true);
-
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i >= 0; }, false, true);
-
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i < 8; }, true, false);
-
-    what_to_do_whith_figure(map, board, new_index, [](int i) { return i >= 0; }, false, false);
+    what_to_do_whith_figure(map, board, start_square, [](int i) { return (i & 7) == 0;; }, -1);
 
 }
 
 
 template <typename Comp>
-void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,std::pair<int,int> index, Comp condition, bool is_increment, bool is_row) {
-    int& ref_index = (is_row) ? index.first : index.second;
-    std::function<void(int&)> func = (is_increment) ? [](int& i) { ++i; } :  [](int& i) { --i; };
+void Rook::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board,int start_square, Comp condition, int step) {
+    int move_square = start_square;
 
-    func(ref_index);
-    while(condition(ref_index )) { // and need to check out Comp as const reference argument will be faster or no
-        if(!board[index.first][index.second])
-            map.insert(IndexPair(index, Move_types::move_to_empty_square));
-        else if((board[index.first][index.second]->is_white_figure() != is_white) && (board[index.first][index.second]->what_figure() != Figures::white_king)
-                                && (board[index.first][index.second]->what_figure() != Figures::black_king)) {
-            map.insert(IndexPair(index, Move_types::capture));
+    bool is_last_legal_move = false;
+
+    if(condition(move_square))
+        is_last_legal_move = true;
+
+    move_square+=step;
+
+    if (move_square < 0 || move_square > 63) return; // mb don't need this if statement
+    while(!is_last_legal_move) {
+        if(condition(move_square))
+            is_last_legal_move = true;
+        if (move_square < 0 || move_square > 63) return;
+        Figures current_figure = board[move_square];
+        if(current_figure == Figures::none )
+            map.emplace(move_square,Move_types::move_to_empty_square);
+        else if((BasicFigure::figure_to_side(current_figure) != BasicFigure::figure_to_side(board[start_square]))
+                 && (current_figure != Figures::white_king) && (current_figure != Figures::black_king) ) {
+            map.emplace(move_square,Move_types::capture);
             break;
         }
         else
             break;
 
-        func(ref_index);
+        move_square+=step;
     }
 }
 
-void Rook::where_to_move(MoveMap& map, const ArrayBoard& board, int current_i, int current_j,bool ) {
-
-        move_for_both_sides(map, board, current_i, current_j);
-}

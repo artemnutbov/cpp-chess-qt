@@ -1,57 +1,46 @@
 #include "bishop.h"
 
-Bishop::Bishop(const Figures& figure, bool is_white)
-    :Basic_figure(figure,is_white) {}
 
+void Bishop::get_bishop_moves(MoveMap& map,const ArrayBoard& board,int current_i) {
+    what_to_do_whith_figure(map, board, current_i, -9);
 
+    what_to_do_whith_figure(map, board, current_i, -7);
 
+    what_to_do_whith_figure(map, board, current_i, 9);
 
-void Bishop::move_for_both_sides(MoveMap& map,const ArrayBoard& board,int current_row, int current_col) {
-    std::pair<int,int> new_index(current_row, current_col);
-
-    std::function<bool(int)> bound_right = [](int i) { return i < 8; };
-
-    std::function<bool(int)> bound_left = [](int i) { return i >= 0; };
-
-    what_to_do_whith_figure(map, board, new_index, bound_right, bound_right, true, true);
-
-    what_to_do_whith_figure(map, board, new_index, bound_right, bound_left, true, false);
-
-    what_to_do_whith_figure(map, board, new_index, bound_left, bound_right, false, true);
-
-    what_to_do_whith_figure(map, board, new_index, bound_left, bound_left, false, false);
+    what_to_do_whith_figure(map, board, current_i, 7);
 
 }
 
 
-template <typename Comp>
-void Bishop::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board, std::pair<int,int> index
-                                     , const Comp& condition_row, const Comp& condition_col, bool is_increment_row, bool is_increment_col) {
+void Bishop::what_to_do_whith_figure(MoveMap& map, const ArrayBoard& board, int start_square, int step) {
+    int move_square = start_square;
 
-    std::function<void(int&)> func_row = (is_increment_row) ? [](int& i) { ++i; }: [](int& i) { --i; } ;
-    std::function<void(int&)> func_col = (is_increment_col) ? [](int& i) { ++i; }: [](int& i) { --i; } ;
+    bool is_last_legal_move = false;
+    if ((step == 9 || step == -7) && (move_square & 7) == 7)
+        is_last_legal_move = true;
+    if ((step == 7 || step == -9) && (move_square & 7) == 0)
+        is_last_legal_move = true;
+    move_square+=step;
+    if (move_square < 0 || move_square > 63) return;
+    while(!is_last_legal_move) {
 
-    func_row(index.first);
-    func_col(index.second);
-    while(condition_row(index.first) &&  condition_col(index.second)) { // and need to check out Comp as const reference argument will be faster or no
-        if(!board[index.first][index.second])
-            map.insert(IndexPair(index,Move_types::move_to_empty_square));
-        else if((board[index.first][index.second]->is_white_figure() != is_white) && (board[index.first][index.second]->what_figure() != Figures::white_king)
-                                                                            && (board[index.first][index.second]->what_figure() != Figures::black_king) ) {
-            map.insert(IndexPair(index,Move_types::capture));
+        if ((step == 9 || step == -7) && (move_square & 7) == 7)
+            is_last_legal_move = true;
+        if ((step == 7 || step == -9) && (move_square & 7) == 0)
+            is_last_legal_move = true;
+        if (move_square < 0 || move_square > 63) return;
+        Figures current_figure = board[move_square];
+        if(current_figure == Figures::none )
+            map.emplace(move_square,Move_types::move_to_empty_square);
+        else if((BasicFigure::figure_to_side(current_figure) != BasicFigure::figure_to_side(board[start_square]))
+                 && (current_figure != Figures::white_king) && (current_figure != Figures::black_king) ) {
+            map.emplace(move_square,Move_types::capture);
             break;
         }
         else
             break;
 
-        func_row(index.first);
-        func_col(index.second);
+        move_square+=step;
     }
-
-}
-
-void Bishop::where_to_move(MoveMap& map, const ArrayBoard& board, int current_row, int current_col,bool is_white_turn_to_move) {
-
-    move_for_both_sides(map, board, current_row, current_col);
-
 }

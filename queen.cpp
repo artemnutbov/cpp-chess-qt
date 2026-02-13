@@ -1,12 +1,9 @@
 #include "queen.h"
+#include "bishop.h"
+#include "rook.h"
 
-Queen::Queen(const Figures& figure, bool is_white)
-    :Basic_figure(figure, is_white), Rook(figure, is_white), Bishop(figure, is_white) {}
+void Queen::get_queen_moves(MoveMap& map, const ArrayBoard& board, int start_square ) {
 
-
-
-void Queen::where_to_move(MoveMap& map, const ArrayBoard& board, int current_i, int current_j,bool ) {
-
-        Rook::move_for_both_sides(map, board, current_i, current_j);
-        Bishop::move_for_both_sides(map, board, current_i, current_j);
+        Rook::get_rook_moves(map, board, start_square);
+        Bishop::get_bishop_moves(map, board, start_square);
 }

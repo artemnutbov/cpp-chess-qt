@@ -1,254 +1,273 @@
 #include "king.h"
-#include "rook.h"
-
-King::King(const Figures& figure, bool is_white)
-    :Basic_figure(figure,is_white), is_in_start_pos(true) {}
 
 
-void King::handle_move() {
-    if(is_in_start_pos)
-        is_in_start_pos = false;
-}
-
-
-bool King::is_king_under_attack(const ArrayBoard& board, int current_row, int current_col,bool is_white_pov) { // need to rewrite bcs it is awful to take 2 int instead of  std::pair
-    if(is_attacked_by_knight(board, current_row, current_col) || is_attacked_by_bishop(board, current_row, current_col)
-        || is_attacked_by_rook(board, current_row, current_col) || is_attacked_by_pawn(board, current_row, current_col, is_white_pov) || is_enemy_king_close(board,  current_row, current_col))
+bool King::is_king_under_attack(const ArrayBoard& board, int start_square,bool is_white_pov, bool is_white) { // need to rewrite bcs it is awful to take 2 int instead of  std::pair
+    if(is_attacked_by_knight(board, start_square, is_white) || is_attacked_by_bishop(board, start_square, is_white)
+        || is_attacked_by_rook(board, start_square, is_white) || is_attacked_by_pawn(board, start_square, is_white_pov, is_white) || is_enemy_king_close(board,  start_square, is_white))
         return true;
     return false;
 }
 
-bool King::is_attacked_by_pawn(const ArrayBoard& board,int current_row, int current_col, bool is_white_pov) {
-    std::pair<int,int> new_index(current_row, current_col);
-
-    if(where_is_pawn(board, new_index, true, is_white_pov) || where_is_pawn(board, new_index,  false, is_white_pov))
-        return true;
-
-    return false;
-}
-
-bool King::where_is_pawn(const ArrayBoard& board, std::pair<int,int> index, bool is_left_attack, bool is_white_pov) {
+bool King::is_attacked_by_pawn(const ArrayBoard& board,int start_square, bool is_white_pov, bool is_white) {
     bool is_go_up = is_white ?  is_white_pov : !is_white_pov;
-    index.second += (is_left_attack) ? 1 : -1;
-    index.first += (is_go_up) ?  -1  : 1;
 
-    if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
-        if(!board[index.first][index.second])
-            return false;
-        else if(board[index.first][index.second]->is_white_figure() != is_white &&
-                 (board[index.first][index.second]->what_figure() == Figures::white_pawn ||  board[index.first][index.second]->what_figure() == Figures::black_pawn)) {
+
+    is_go_up ? start_square-=8 : start_square+=8;
+
+
+    bool is_last_legal_move = false;
+    if((start_square & 7) == 7)
+        is_last_legal_move = true;
+    ++start_square;
+    if(board[start_square] != Figures::none && !is_last_legal_move ) {
+        if(BasicFigure::figure_to_side(board[start_square]) != is_white
+            && ( board[start_square] == Figures::white_pawn ||  board[start_square] == Figures::black_pawn)) {
             return true;
         }
+    }
 
+    is_last_legal_move = false;
+    --start_square;
+    if((start_square & 7) == 0)
+        is_last_legal_move = true;
+    --start_square;
+
+    if(board[start_square] != Figures::none && !is_last_legal_move  ) {
+        if(BasicFigure::figure_to_side(board[start_square]) != is_white
+            && ( board[start_square] == Figures::white_pawn ||  board[start_square] == Figures::black_pawn)) {
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
+
+bool King::is_attacked_by_knight(const ArrayBoard& board,int start_square, bool is_white) {
+    int offsets[] = {-17, -15, -10, -6, 6, 10, 15, 17};
+    int move_square = start_square;
+    for (int offset : offsets) {
+        int index = move_square + offset;
+
+        if (index < 0 || index > 63) continue;
+
+        // did we teleport?
+        // if diff > 2, we wrapped around the board edges.
+        if (std::abs((move_square & 7) - (index & 7)) > 2) continue;
+
+        Figures current_figure = board[index];
+        if(current_figure == Figures::none )
+            continue;
+        else if((BasicFigure::figure_to_side(current_figure) != is_white)
+                 && (current_figure == Figures::white_knight || current_figure == Figures::black_knight) ) {
+            return true;
+        }
     }
     return false;
 
 }
 
-bool King::is_attacked_by_knight(const ArrayBoard& board,int current_row, int current_col) {
-    std::pair<int,int> new_index(current_row, current_col);
 
-    if(where_is_knight(board, new_index, 1, 2) || where_is_knight(board, new_index, 2, 1)
-        || where_is_knight(board, new_index, -1, -2) || where_is_knight(board, new_index, -2, -1)
-        || where_is_knight(board, new_index, -1, 2) || where_is_knight(board, new_index, -2, 1)
-        || where_is_knight(board, new_index, 2, -1) || where_is_knight(board, new_index, 1, -2))
+bool King::is_attacked_by_bishop(const ArrayBoard& board,int start_square, bool is_white) {
+
+    if(where_is_bishop(board, start_square, 9, is_white) || where_is_bishop(board, start_square, 7, is_white)
+        || where_is_bishop(board, start_square, -9, is_white) || where_is_bishop(board, start_square, -7, is_white))
         return true;
-
     return false;
 }
 
 
+bool King::where_is_bishop(const ArrayBoard& board, int start_square, int step, bool is_white) {
+    int move_square = start_square;
 
-bool King::where_is_knight(const ArrayBoard& board, std::pair<int,int> index, int pos_row, int pos_col) {
+    bool is_last_legal_move = false;
+    if ((step == 9 || step == -7) && (move_square & 7) == 7)
+        is_last_legal_move = true;
+    if ((step == 7 || step == -9) && (move_square & 7) == 0)
+        is_last_legal_move = true;
+    move_square+=step;
+    if (move_square < 0 || move_square > 63) return false;
+    while(!is_last_legal_move) {
+        if ((step == 9 || step == -7) && (move_square & 7) == 7)
+            is_last_legal_move = true;
+        if ((step == 7 || step == -9) && (move_square & 7) == 0)
+            is_last_legal_move = true;
+        if (move_square < 0 || move_square > 63) return false;
+        Figures current_figure = board[move_square];
+        if(current_figure == Figures::none ){
 
-    std::function<void(int&,int)> func = [](int& i, int pos ) { i+=pos; };
-
-    func(index.first, pos_row);
-    func(index.second, pos_col);
-
-    if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
-        if(!board[index.first][index.second])
-            return false;
-        else if(board[index.first][index.second]->is_white_figure() != is_white &&
-                 (board[index.first][index.second]->what_figure() == Figures::white_knight ||  board[index.first][index.second]->what_figure() == Figures::black_knight)) {
+            move_square+=step;
+            continue;
+        }
+        if(is_white) {
+            if(current_figure == Figures::white_king) {
+                move_square+=step;
+                continue;
+            }
+        }
+        else{
+            if(current_figure == Figures::black_king) {
+                move_square+=step;
+                continue;
+            }
+        }
+        if((BasicFigure::figure_to_side(current_figure) != is_white)
+                 && (current_figure == Figures::white_bishop || current_figure == Figures::black_bishop
+                       || current_figure == Figures::white_queen || current_figure == Figures::black_queen)) {
             return true;
         }
+        else
+            return false;
 
+        move_square+=step;
     }
     return false;
-
 }
 
-bool King::is_attacked_by_bishop(const ArrayBoard& board,int current_row, int current_col) {
-    std::pair<int,int> new_index(current_row, current_col);
 
-    std::function<bool(int)> bound_right = [](int i) { return i < 8; };
-
-    std::function<bool(int)> bound_left = [](int i) { return i >= 0; };
-
-    if(where_is_bishop(board, new_index, bound_right, bound_right, true, true) || where_is_bishop(board, new_index, bound_right, bound_left, true, false)
-        || where_is_bishop(board, new_index, bound_left, bound_right, false, true) || where_is_bishop(board, new_index, bound_left, bound_left, false, false))
+bool King::is_attacked_by_rook(const ArrayBoard& board,int start_square,  bool is_white) {
+    if( where_is_rook(board, start_square, [](int i) { return (i >> 3) == 7; }, 8, is_white) || where_is_rook(board, start_square, [](int i) { return (i >> 3) == 0; }, -8, is_white)
+        || where_is_rook(board, start_square, [](int i) { return (i & 7) == 7; }, 1, is_white) || where_is_rook(board, start_square, [](int i) { return (i & 7) == 0; }, -1, is_white))
         return true;
     return false;
 }
 
 
 template <typename Comp>
-bool King::where_is_bishop(const ArrayBoard& board, std::pair<int,int> index
-                                     ,const Comp& condition_row, const Comp& condition_col, bool is_increment_row, bool is_increment_col) {
+bool King::where_is_rook(const ArrayBoard& board,int start_square, Comp condition, int step, bool is_white) {
+    int move_square = start_square;
 
-    std::function<void(int&)> func_row = (is_increment_row) ? [](int& i) { ++i; }: [](int& i) { --i; } ;
-    std::function<void(int&)> func_col = (is_increment_col) ? [](int& i) { ++i; }: [](int& i) { --i; } ;
 
-    func_row(index.first);
-    func_col(index.second);
-    while(condition_row(index.first) &&  condition_col(index.second)) { // and need to check out Comp as const reference argument will be faster or no
-        if(!board[index.first][index.second]){
-            func_row(index.first);
-            func_col(index.second);
+    bool is_last_legal_move = false;
+    if(condition(move_square))
+        is_last_legal_move = true;
+    move_square+=step;
+    if (move_square < 0 || move_square > 63) return false;
+    while(!is_last_legal_move) {
+        if(condition(move_square))
+            is_last_legal_move = true;
+        if (move_square < 0 || move_square > 63) return false;
+        Figures current_figure = board[move_square];
+        if(current_figure == Figures::none ){
+            move_square+=step;
             continue;
         }
-        Figures is_attacked_by = board[index.first][index.second]->what_figure();
         if(is_white) {
-            if(is_attacked_by == Figures::white_king) {
-                func_row(index.first);
-                func_col(index.second);
+            if(current_figure == Figures::white_king) {
+                move_square+=step;
                 continue;
             }
         }
         else{
-            if(is_attacked_by == Figures::black_king) {
-                func_row(index.first);
-                func_col(index.second);
+            if(current_figure == Figures::black_king) {
+                move_square+=step;
                 continue;
             }
         }
 
-
-        if(board[index.first][index.second]->is_white_figure() != is_white && (is_attacked_by == Figures::white_bishop || is_attacked_by == Figures::black_bishop
-                                                                       || is_attacked_by == Figures::black_queen || is_attacked_by == Figures::white_queen )) {
+        if((BasicFigure::figure_to_side(current_figure) != is_white)
+                 && (current_figure == Figures::white_rook || current_figure == Figures::black_rook
+                       || current_figure == Figures::white_queen || current_figure == Figures::black_queen))
             return true;
-        }
         else
             return false;
+        move_square+=step;
+    }
+    return false;
 
-        func_row(index.first);
-        func_col(index.second);
+
+}
+
+bool King::is_enemy_king_close(const ArrayBoard& board, int start_square,  bool is_white) {
+    int offsets[] = {-9, -8, -7, -1, 1, 7, 8, 9};
+    int move_square = start_square;
+
+    for (int offset : offsets) {
+        int index = move_square + offset;
+
+        if (index < 0 || index > 63) continue;
+
+        // did we teleport?
+        // if diff > 2, we wrapped around the board edges.
+        if (std::abs((move_square & 7) - (index & 7)) > 2) continue; // not sure this right check or not, need to test !!!
+
+        Figures current_figure = board[index];
+
+        Figures enemy_king = is_white ? Figures::black_king : Figures::white_king;
+        if(current_figure != Figures::none && board[index] == enemy_king )
+            return true;
     }
     return false;
 }
 
+void King::get_king_moves(MoveMap& map, const ArrayBoard& board, const std::array<bool,64>& is_in_start_pos_board, int start_square, bool is_white_pov, bool is_white) {
+    int offsets[] = {-9, -8, -7, -1, 1, 7, 8, 9};
+    int move_square = start_square;
 
-bool King::is_attacked_by_rook(const ArrayBoard& board,int current_i, int current_j) {
-    std::pair<int,int> new_index(current_i, current_j);
-    if( where_is_rook(board, new_index, [](int i) { return i < 8; }, true, true) || where_is_rook(board, new_index, [](int i) { return i >= 0; }, false, true)
-        || where_is_rook(board, new_index, [](int i) { return i < 8; }, true, false) || where_is_rook(board, new_index, [](int i) { return i >= 0; }, false, false))
-        return true;
-    return false;
-}
+    for (int offset : offsets) {
+        int index = move_square + offset;
 
+        if (index < 0 || index > 63) continue;
 
-template <typename Comp>
-bool King::where_is_rook(const ArrayBoard& board,std::pair<int,int> new_index, Comp condition, bool is_increment, bool is_row) {
-    int& index = (is_row) ? new_index.first : new_index.second;
-    std::function<void(int&)> func = (is_increment) ? [](int& i) { ++i; } :  [](int& i) { --i; };
+        // did we teleport?
+        // if diff > 2, we wrapped around the board edges.
+        if (std::abs((move_square & 7) - (index & 7)) > 2) continue;
 
-    func(index);
-    while(condition(index )) { // and need to check out Comp as const reference argument will be faster or no
-        if(!board[new_index.first][new_index.second]) {
-            func(index);
+        Figures current_figure = board[index];
+        if(current_figure != Figures::none && BasicFigure::figure_to_side(current_figure) == is_white)
+            continue;
+        bool can_move = is_king_under_attack(board, index, is_white_pov, is_white);
+        if(current_figure == Figures::none) {
+            if(!can_move)
+                map.emplace(index, Move_types::move_to_empty_square);
             continue;
         }
-        Figures is_attacked_by = board[new_index.first][new_index.second]->what_figure();
-        if(is_white) {
-            if(is_attacked_by == Figures::white_king) {
-                func(index);
-                continue;
-            }
-        }
-        else{
-            if(is_attacked_by == Figures::black_king) {
-                func(index);
-                continue;
-            }
-        }
-        if(board[new_index.first][new_index.second]->is_white_figure() != is_white && (is_attacked_by == Figures::white_rook || is_attacked_by == Figures::black_rook
-            || is_attacked_by == Figures::black_queen || is_attacked_by == Figures::white_queen)) {
-            return true;
-        }
-        else
-            return false;
-        func(index);
-    }
-    return false;
-}
-
-bool King::is_enemy_king_close(const ArrayBoard& board, int current_row, int current_col) {
-    for(int i = -1; i < 2;++i) {
-        for(int j = -1; j < 2;++j) {
-            if(i == 0 && j == 0)
-                continue;
-            std::pair<int,int> index(current_row+i, current_col+j);
-            if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
-                Figures enemy_king = is_white ? Figures::black_king : Figures::white_king;
-                if(board[index.first][index.second] && board[index.first][index.second]->what_figure() == enemy_king )
-                    return true;
-
-            }
+        else if(BasicFigure::figure_to_side(current_figure) != is_white && !can_move) {
+            map.emplace(index, Move_types::capture);
         }
     }
 
-    return false;
-}
-
-void King::move_for_both_sides(MoveMap& map, const ArrayBoard& board, int current_row, int current_col,bool is_white_pov) {
-    for(int i = -1; i < 2;++i) {
-        for(int j = -1; j < 2;++j) {
-            if(i == 0 && j == 0)
-                continue;
-            std::pair<int,int> index(current_row+i, current_col+j);
-            if(index.first < 8 && index.first >= 0 &&  index.second < 8 && index.second >= 0 ) {
-                if(board[index.first][index.second] && board[index.first][index.second]->is_white_figure() == is_white )
-                    continue;
-                bool can_move = is_king_under_attack(board, index.first, index.second, is_white_pov);
-
-                if(!board[index.first][index.second]){
-                    if(!can_move)
-                        map.insert(IndexPair(index, Move_types::move_to_empty_square));
-                    continue;
-                }
-                else if(board[index.first][index.second]->is_white_figure() != is_white && !can_move ) {
-                    map.insert(IndexPair(index, Move_types::capture));
-                }
-            }
-        }
-    }
     Figures rook = (is_white) ? Figures::white_rook : Figures::black_rook;
 
-
-
-    if(is_in_start_pos && board[current_row][0] && board[current_row][0]->what_figure() == rook) {
-        if(!board[current_row][current_col - 1] && !board[current_row][current_col - 2]) {
-            if(dynamic_cast<Rook*>(board[current_row][0].get())->is_in_start_position() && !is_king_under_attack(board, current_row, current_col, is_white_pov)
-                &&  !is_king_under_attack(board, current_row, current_col - 1, is_white_pov) && !is_king_under_attack(board, current_row, current_col - 2, is_white_pov)) {
-                map.insert(IndexPair(std::pair<int,int>(current_row, current_col - 2), Move_types::short_castling));
+    if(is_white_pov) {
+        if(is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8 + 7] == rook) {
+            if(board[start_square + 1] ==  Figures::none && board[start_square + 2] ==  Figures::none) {
+                if(is_in_start_pos_board[(start_square >> 3) * 8 + 7] && !is_king_under_attack(board, start_square, is_white_pov, is_white)
+                    &&  !is_king_under_attack(board, start_square + 1, is_white_pov, is_white) && !is_king_under_attack(board, start_square + 2, is_white_pov, is_white)) {
+                    map.emplace(start_square + 2, Move_types::short_castling);
+                }
+            }
+        }
+        if(is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8 ] == rook) {
+            if(board[start_square - 1] ==  Figures::none && board[start_square - 2] == Figures::none && board[start_square - 3] ==  Figures::none) {
+                if(is_in_start_pos_board[(start_square >> 3) * 8 ] && !is_king_under_attack(board, start_square, is_white_pov, is_white) // not sure about + 7 !!!
+                    &&  !is_king_under_attack(board,start_square - 1,is_white_pov, is_white) && !is_king_under_attack(board, start_square - 2, is_white_pov, is_white)
+                    && !is_king_under_attack(board, start_square - 3, is_white_pov, is_white)) {
+                    map.emplace(start_square - 2, Move_types::long_castling);
+                }
             }
         }
     }
+    else {
+        if(is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8] == rook) {
+            if(board[start_square - 1] ==  Figures::none && board[start_square - 2] ==  Figures::none) {
+                if(is_in_start_pos_board[(start_square >> 3) * 8]  && !is_king_under_attack(board, start_square, is_white_pov, is_white)
+                    &&  !is_king_under_attack(board, start_square - 1, is_white_pov, is_white) && !is_king_under_attack(board, start_square - 2, is_white_pov, is_white)) {
+                    map.emplace(start_square - 2, Move_types::short_castling);
+                }
+            }
+        }
 
-    if(is_in_start_pos && board[current_row][7] && board[current_row][7]->what_figure() == rook) {
-        if(!board[current_row][current_col + 1] && !board[current_row][current_col + 2] && !board[current_row][current_col + 3]) {
-            if(dynamic_cast<Rook*>(board[current_row][0].get())->is_in_start_position() && !is_king_under_attack(board, current_row, current_col, is_white_pov)
-                &&  !is_king_under_attack(board, current_row, current_col + 1,is_white_pov) && !is_king_under_attack(board, current_row, current_col + 2, is_white_pov)
-                && !is_king_under_attack(board, current_row, current_col + 3, is_white_pov)) {
-                map.insert(IndexPair(std::pair<int,int>(current_row, current_col + 2), Move_types::long_castling));
+        if(is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8 + 7] == rook) {
+            if(board[start_square + 1] ==  Figures::none && board[start_square + 2] == Figures::none && board[start_square + 3] ==  Figures::none) {
+                if(is_in_start_pos_board[(start_square >> 3) * 8 + 7] && !is_king_under_attack(board, start_square, is_white_pov, is_white) // not sure about + 7 !!!
+                    &&  !is_king_under_attack(board,start_square + 1,is_white_pov, is_white) && !is_king_under_attack(board, start_square + 2, is_white_pov, is_white)
+                    && !is_king_under_attack(board, start_square + 3, is_white_pov, is_white)) {
+                    map.emplace(start_square + 2, Move_types::long_castling);
+                }
             }
         }
     }
-
-}
-void King::where_to_move(MoveMap& map, const ArrayBoard& board, int current_row, int current_col, bool is_white_pov) {
-
-    move_for_both_sides(map, board, current_row, current_col,is_white_pov);
 
 }

@@ -1,19 +1,12 @@
 #ifndef BISHOP_H
 #define BISHOP_H
-#include "Basic_figure.h"
+#include "BasicFigure.h"
 
-class Bishop: public virtual Basic_figure {
+class Bishop {
 public:
-
-    Bishop(const Figures& , bool );
-
-    void where_to_move(MoveMap& ,const ArrayBoard& , int , int , bool ) override;
-
+    static void get_bishop_moves(MoveMap& , const ArrayBoard& ,int );
 protected:
-    void move_for_both_sides(MoveMap& , const ArrayBoard& ,int , int );
-
-    template <typename Comp>
-    void what_to_do_whith_figure(MoveMap&, const ArrayBoard&, std::pair<int,int>, const Comp&, const Comp&, bool, bool);
+    static void what_to_do_whith_figure(MoveMap&, const ArrayBoard&, int, int);
 };
 
 #endif // BISHOP_H

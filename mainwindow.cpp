@@ -5,9 +5,9 @@
 #include <QPainterPath>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow), x(0), y(0), start_x_pos(100), start_y_pos(70), cell_size(60),
-    white_button_rect(300,300,cell_size*3,cell_size),black_button_rect(300,300+cell_size+3,cell_size*3,cell_size)
+    : QMainWindow(parent), ui(new Ui::MainWindow), x(0), y(0), start_x_pos(100), start_y_pos(70), cell_size(60),
+    white_button_rect(300,300,cell_size*3,cell_size),black_button_rect(300,300+cell_size+3,cell_size*3,cell_size),
+    gray_button_rect(start_x_pos+cell_size*8+2,start_y_pos+cell_size*7,cell_size*2,cell_size)
 {
     ui->setupUi(this);
     set_up_images();
@@ -57,14 +57,16 @@ void MainWindow::set_up() {
     promote_figures[1] = Figures_Name::rook;
     promote_figures[2] = Figures_Name::knight;
     promote_figures[3] = Figures_Name::queen;
-    //board.set_up();
+    Board::init_zobrist();
+    //board.set_up(true);
 
 }
 
 void MainWindow::draw_result(QPainter& p) {
     int circle_result_radius = 18;
-    QPoint white_king_coordinates(coordinates_board[board.get_king_index(true).first][board.get_king_index(true).second]);
-    QPoint black_king_coordinates(coordinates_board[board.get_king_index(false).first][board.get_king_index(false).second]);
+    QPoint white_king_coordinates(coordinates_board[board.get_king_index(true) >> 3][board.get_king_index(true) & 7]);
+    QPoint black_king_coordinates(coordinates_board[board.get_king_index(false) >> 3][board.get_king_index(false) & 7]);
+
     switch (board.what_game_state()) {
     case Game_Result_Status::Stalemate: {
         QColor my_transparent_gray(85,85,85, 230);
@@ -116,7 +118,8 @@ void MainWindow::draw_legal_moves(QPainter& p) {
     QPainterPath path;
     p.setBrush(my_transparent_black);
     for(const auto& it : board.all_legal_moves()) {
-        QPointF center_of_cell(it.first.second*cell_size + start_x_pos + half_cell_size ,it.first.first*cell_size + half_cell_size +  start_y_pos);
+        QPointF center_of_cell((it.first&7)*cell_size + start_x_pos + half_cell_size ,(it.first >> 3)*cell_size + half_cell_size +  start_y_pos);
+
         if(it.second == Move_types::capture || it.second == Move_types::promote_and_capture){ // idk problem with drawing that circle same transparent color
             path.addEllipse(center_of_cell,half_cell_size,half_cell_size);
             path.addEllipse(center_of_cell,half_cell_size-cicle_thickness,half_cell_size-cicle_thickness);
@@ -129,27 +132,27 @@ void MainWindow::draw_legal_moves(QPainter& p) {
 }
 
 void MainWindow::draw_figure_promotion(QPainter& p) {
-    std::pair<int,int> promote_index = board.get_promote_index();
+    int promote_index = board.get_promote_index();
     p.setPen(Qt::NoPen);
     p.setBrush(Qt::white);
     bool is_white_pov = board.get_white_pov();
-    if(7 == promote_index.first) {
-        QRect promote_rect(coordinates_board[promote_index.first-3][promote_index.second],QSize(cell_size, 4*cell_size));
+    if(7 == promote_index >> 3 ) {
+        QRect promote_rect(coordinates_board[(promote_index >> 3) -3][promote_index & 7],QSize(cell_size, 4*cell_size));
         p.drawRect(promote_rect);
 
-        p.drawPixmap(coordinates_board[promote_index.first-3][promote_index.second],images_map[Board::name_to_figure(promote_figures[0],!is_white_pov)]);
-        p.drawPixmap(coordinates_board[promote_index.first-2][promote_index.second],images_map[Board::name_to_figure(promote_figures[1],!is_white_pov)]);
-        p.drawPixmap(coordinates_board[promote_index.first-1][promote_index.second],images_map[Board::name_to_figure(promote_figures[2],!is_white_pov)]);
-        p.drawPixmap(coordinates_board[promote_index.first][promote_index.second],images_map[Board::name_to_figure(promote_figures[3],!is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)-3][promote_index & 7],images_map[Board::name_to_figure(promote_figures[0],!is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)-2][promote_index & 7],images_map[Board::name_to_figure(promote_figures[1],!is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)-1][promote_index & 7],images_map[Board::name_to_figure(promote_figures[2],!is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)][promote_index & 7],images_map[Board::name_to_figure(promote_figures[3],!is_white_pov)]);
     }
     else {
-        QRect promote_rect(coordinates_board[promote_index.first][promote_index.second],QSize(cell_size, 4*cell_size));
+        QRect promote_rect(coordinates_board[(promote_index >> 3)][promote_index & 7],QSize(cell_size, 4*cell_size));
         p.drawRect(promote_rect);
 
-        p.drawPixmap(coordinates_board[promote_index.first+3][promote_index.second],images_map[Board::name_to_figure(promote_figures[0],is_white_pov)]);
-        p.drawPixmap(coordinates_board[promote_index.first+2][promote_index.second],images_map[Board::name_to_figure(promote_figures[1],is_white_pov)]);
-        p.drawPixmap(coordinates_board[promote_index.first+1][promote_index.second],images_map[Board::name_to_figure(promote_figures[2],is_white_pov)]);
-        p.drawPixmap(coordinates_board[promote_index.first][promote_index.second],images_map[Board::name_to_figure(promote_figures[3],is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)+3][promote_index & 7],images_map[Board::name_to_figure(promote_figures[0],is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)+2][promote_index & 7],images_map[Board::name_to_figure(promote_figures[1],is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)+1][promote_index & 7],images_map[Board::name_to_figure(promote_figures[2],is_white_pov)]);
+        p.drawPixmap(coordinates_board[(promote_index >> 3)][promote_index & 7],images_map[Board::name_to_figure(promote_figures[3],is_white_pov)]);
     }
 
 }
@@ -181,6 +184,12 @@ void MainWindow::draw_board_squares(QPainter& p) {
     }
 }
 
+void MainWindow::draw_undo_move_button(QPainter& p) {
+    p.setPen(Qt::gray);
+    p.setBrush(Qt::gray);
+    p.drawRect(gray_button_rect);
+
+}
 
 void MainWindow::draw_choosing_side_buttons(QPainter& p) {
     QColor my_white(235,246,208);
@@ -205,8 +214,8 @@ void MainWindow::draw_choosing_side_buttons(QPainter& p) {
 void MainWindow::draw_figures(QPainter& p) {
     for(size_t i = 0;i < 8;++i) {
         for(size_t j = 0;j < 8;++j){
-            if(board.valid_index(i,j))
-                p.drawPixmap(coordinates_board[i][j].x(), coordinates_board[i][j].y(),images_map[board.what_figure_index(i,j)]);
+            if(board.valid_index(i*8+j))
+                p.drawPixmap(coordinates_board[i][j].x(), coordinates_board[i][j].y(),images_map[board.what_figure_index(i*8+j)]);
         }
     }
 }
@@ -226,10 +235,10 @@ void MainWindow::paintEvent(QPaintEvent *)
             draw_legal_moves(p);
         }
 
+        draw_undo_move_button(p);
         draw_figures(p);
 
-        if(click_state == Click_Game_State::choose_figure_to_promote) { // half done promoting pawn
-            // need to separate for black one order for white another
+        if(click_state == Click_Game_State::choose_figure_to_promote) {
             draw_figure_promotion(p);
         }
     }
@@ -237,13 +246,10 @@ void MainWindow::paintEvent(QPaintEvent *)
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
     // check for click
-//    if(board.what_game_state() != Game_Result_Status::Playing_Now)
-  //      return;
+   if(board.what_game_state() != Game_Result_Status::Playing_Now && board.what_game_state() != Game_Result_Status::Not_Started )
+        return;
     QPoint pos = event->pos();
     QRect area(start_x_pos,start_y_pos,cell_size*8,cell_size*8);
-    // if(!area.contains(pos)) {
-    //     return;
-    // }
 
     switch (click_state) {
     case Click_Game_State::choose_play_side: {
@@ -258,15 +264,18 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         break;
     }
     case Click_Game_State::none: {
-        if(!area.contains(pos)) {
-            return;
+        if(area.contains(pos)) {
+            x = (pos.x() - start_x_pos) / 60;
+            y = (pos.y() - start_y_pos) / 60;
+            if(board.valid_index(y*8 + x)) {
+                board.all_figure_move(y*8+x);
+                click_state = Click_Game_State::choosing_figure;
+            }
         }
-        x = (pos.x() - start_x_pos) / 60;
-        y = (pos.y() - start_y_pos) / 60;
-        if(board.valid_index(y,x)) {
-            board.all_figure_move(x,y);
-            click_state = Click_Game_State::choosing_figure;
+        else if(gray_button_rect.contains(pos)) {
+            board.undo_move();
         }
+
         break;
     }
     case Click_Game_State::choosing_figure: {
@@ -275,12 +284,11 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         }
         int new_x_index = (pos.x() - start_x_pos) / 60;
         int new_y_index = (pos.y() - start_y_pos) / 60;
-
-        if(!board.action_move(x, y, new_x_index, new_y_index)) {
+        if(!board.action_move(x + y*8, new_x_index + new_y_index*8)) {
             click_state = Click_Game_State::none;
             break;
         }
-        if(board.is_pawn_promote(new_x_index,new_y_index)) {
+        if(board.is_pawn_promote(new_x_index + new_y_index*8)) {
             click_state = Click_Game_State::choose_figure_to_promote;
         }
         else{
@@ -290,21 +298,22 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
 
         break;
     }
+
     case Click_Game_State::choose_figure_to_promote: {
-        std::pair<int,int> promote_index = board.get_promote_index();
-        if(promote_index.first == 7)
-            promote_index.first-=3;
-        QRect area_of_promote_figures(coordinates_board[promote_index.first][promote_index.second],QSize(cell_size, cell_size*4));
+        int promote_index = board.get_promote_index();
+        if((promote_index >> 3) == 7)
+            promote_index-=3*8;
+        QRect area_of_promote_figures(coordinates_board[promote_index >> 3][promote_index & 7],QSize(cell_size, cell_size*4));
         if(!area_of_promote_figures.contains(pos)) {
             break;
         }
         int promotion_rank = (pos.y() - start_y_pos) / 60;
         Figures_Name choosen_figure_to_promote;
-        if(promote_index.first == 0) {
+        if((promote_index >> 3) == 0) {
             board.promotion(*std::prev(promote_figures.end(),1+promotion_rank), board.get_white_pov());
         }
         else {
-            board.promotion(promote_figures[promotion_rank-promote_index.first], !board.get_white_pov());
+            board.promotion(promote_figures[promotion_rank-(promote_index >> 3)], !board.get_white_pov());
         }
         click_state = Click_Game_State::none;
         board.set_result_state();

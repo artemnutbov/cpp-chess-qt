@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QMouseEvent>
-#include "Basic_figure.h"
+#include "BasicFigure.h"
 #include <array>
 #include "board.h"
 
@@ -39,6 +39,8 @@ private:
     Click_Game_State click_state = Click_Game_State::choose_play_side;
     QRect white_button_rect;
     QRect black_button_rect;
+    QRect gray_button_rect;
+
     Board board;
     ImagesMap images_map;
     void set_up();
@@ -50,6 +52,7 @@ private:
     void draw_board_squares(QPainter& );
     void draw_figures(QPainter& );
     void draw_choosing_side_buttons(QPainter& );
+    void draw_undo_move_button(QPainter& );
 protected:
     void paintEvent(QPaintEvent *) override;
     void mousePressEvent(QMouseEvent*) override;

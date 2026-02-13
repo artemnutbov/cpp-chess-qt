@@ -1,14 +1,11 @@
 #ifndef QUEEN_H
 #define QUEEN_H
-#include "rook.h"
-#include "bishop.h"
+#include "BasicFigure.h"
 
-class Queen: public Rook, public  Bishop {
+
+class Queen {
 public:
-    Queen(const Figures& ,bool );
-
-    void where_to_move(MoveMap& ,const ArrayBoard& , int , int , bool ) override;
-private:
+    static void get_queen_moves(MoveMap& ,const ArrayBoard& ,int );
 
 };
 
