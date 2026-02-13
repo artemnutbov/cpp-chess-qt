@@ -1,12 +1,13 @@
 #ifndef BISHOP_H
 #define BISHOP_H
-#include "BasicFigure.h"
+#include "config.h"
 
 class Bishop {
 public:
-    static void get_bishop_moves(MoveMap& , const ArrayBoard& ,int );
+    static void GetBishopMoves(MoveMap&, const ArrayBoard&, int);
+
 protected:
-    static void what_to_do_whith_figure(MoveMap&, const ArrayBoard&, int, int);
+    static void WhatToDoWhithFigure(MoveMap&, const ArrayBoard&, int, int);
 };
 
-#endif // BISHOP_H
+#endif  // BISHOP_H

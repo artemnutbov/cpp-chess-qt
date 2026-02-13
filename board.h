@@ -1,75 +1,78 @@
 #ifndef BOARD_H
 #define BOARD_H
-#include "BasicFigure.h"
 #include <array>
-//#include <cstdint>
 
-enum class Game_Result_Status {
-    White_win, Black_win, Stalemate, Playing_Now , Not_Started
-};
+#include "config.h"
+// #include <cstdint>
 
-enum class Figures_Name {
-    rook, king, knight, pawn, bishop, queen,
+enum class GameResultStatus { kWhiteWin, kBlackWin, kStalemate, kPlayingNow, kNotStarted };
+
+enum class FiguresName {
+    kRook,
+    kKing,
+    kKnight,
+    kPawn,
+    kBishop,
+    kQueen,
 };
 
 class Board {
-    int black_king_index;
-    int white_king_index;
-    int count_50rule_draw = 0;
-    bool is_white_turn_to_move = true;
-    bool is_white_pov;
-    std::array<bool, 64> is_in_start_pos_board;
-    std::array<Figures ,64> board;
-    IndexPair  promote_pawn_index;
-    MoveMap index_pair_map;
-    Game_Result_Status game_result_status;
+    int black_king_index_;
+    int white_king_index_;
+    int count_50rule_draw_ = 0;
+    bool is_white_turn_to_move_ = true;
+    bool is_white_pov_;
+    std::array<bool, 64> is_in_start_pos_board_;
+    std::array<Figures, 64> board_;
+    IndexPair promote_pawn_index_;
+    MoveMap index_pair_map_;
+    GameResultStatus game_result_status_;
 
     // zobrist hashing variables
-    uint64_t current_hash = 0;
+    uint64_t current_hash_ = 0;
 
     // random numbers for: [PieceType][Square]
     // 0-5 white (P,N,B,R,Q,K), 6-11 black
-    static uint64_t zobrist_pieces[12][64];
-    static uint64_t zobrist_side_to_move;
-    static uint64_t zobrist_castling[4]; // WK, WQ, BK, BQ
-    static uint64_t zobrist_en_passant[8]; // 8 files
+    static uint64_t zobrist_pieces_[12][64];
+    static uint64_t zobrist_side_to_move_;
+    static uint64_t zobrist_castling_[4];    // WK, WQ, BK, BQ
+    static uint64_t zobrist_en_passant_[8];  // 8 files
 
     struct MoveInfo {
-        Move_types move_type;
+        MoveTypes move_type;
         Figures our_figure;
-        Figures additional_figure = Figures::none;
+        Figures additional_figure = Figures::kNone;
         bool is_promote = false;
         int from_square;
         int to_square;
         uint64_t hash_snapshot;
     };
-    std::vector<MoveInfo> history;
+    std::vector<MoveInfo> history_;
+
 public:
-    static std::pair<int, int> to_pair(int square);
-    static int to_int(int x, int y);
-    static Figures name_to_figure(Figures_Name, bool);
-    void square_move(int);
+    static Figures NameToFigure(FiguresName, bool);
+    void SquareMove(int);
 
-    void undo_move();
-    void set_up(bool);
-    void all_figure_move(int);
-    void promotion(Figures_Name, bool);
-    bool action_move(int, int);
-    void set_result_state();
-    bool valid_index(int);
-    bool is_pawn_promote(int);
-    Figures what_figure_index(int);
-    MoveMap& all_legal_moves();
+    void UndoMove();
+    void SetUp(bool);
+    void AllFigureMove(int);
+    void Promotion(FiguresName, bool);
+    bool ActionMove(int, int);
+    void SetResultState();
+    bool ValidIndex(int);
+    bool IsPawnPromote(int);
+    Figures GetFigure(int);
+    MoveMap& GetAllLegalMoves();
 
-    static void init_zobrist();
-    uint64_t compute_hash();    // calculates the hash of the CURRENT board
-    bool is_repetition() const; // checks the history for draws
+    static void InitZobrist();
+    uint64_t ComputeHash();     // calculates the hash of the CURRENT board
+    bool IsRepetition() const;  // checks the history for draws
 
-    Game_Result_Status what_game_state()const;
-    int get_king_index(bool)const;
-    int get_promote_index() const;
-    bool get_white_pov()const;
+    GameResultStatus GetGameState() const;
+    int GetKingIndex(bool) const;
+    int GetPromoteIndex() const;
+    bool GetWhitePov() const;
     Board();
 };
 
-#endif // BOARD_H
+#endif  // BOARD_H

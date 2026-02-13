@@ -17,9 +17,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+        main_window.cpp
+        main_window.h
+        main_window.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -28,9 +28,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         resources.qrc
 
-        BasicFigure.cpp
-        BasicFigure.cpp
-        BasicFigure.h
+        config.cpp
+        config.cpp
+        config.h
         rook.h rook.cpp
         pawn.h pawn.cpp
         bishop.h bishop.cpp

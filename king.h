@@ -1,29 +1,26 @@
 #ifndef KING_H
 #define KING_H
-#include "BasicFigure.h"
+#include "config.h"
 class King {
 public:
+    static void GetKingMoves(MoveMap&, const ArrayBoard&, const std::array<bool, 64>&, int, bool,
+                             bool);
+    static bool IsKingUnderAttack(const ArrayBoard&, int, bool, bool);
 
-    static void get_king_moves(MoveMap& ,const ArrayBoard&, const std::array<bool,64>& ,int ,bool ,bool ) ;
-    static bool is_king_under_attack(const ArrayBoard& , int,  bool,  bool);
 private:
+    static bool IsAttackedByPawn(const ArrayBoard&, int, bool, bool);
+    static bool IsAttackedByKnight(const ArrayBoard&, int, bool);
+    static bool IsAttackedByBishop(const ArrayBoard&, int, bool);
+    // bool where_is_knight(const ArrayBoard&, std::pair<int,int>, int, int);
 
-    static bool is_attacked_by_pawn(const ArrayBoard& ,int, bool, bool);
-    static bool is_attacked_by_knight(const ArrayBoard& ,int, bool);
-    static bool is_attacked_by_bishop(const ArrayBoard&, int, bool);
-    //bool where_is_knight(const ArrayBoard&, std::pair<int,int>, int, int);
+    static bool WhereIsPawn(const ArrayBoard&, int, bool, bool);
+    static bool WhereIsBishop(const ArrayBoard&, int, int, bool);
 
-    static bool where_is_pawn(const ArrayBoard&, int, bool, bool);
-    static bool where_is_bishop(const ArrayBoard&, int, int, bool);
-
-    static bool is_attacked_by_rook(const ArrayBoard&, int, bool);
+    static bool IsAttackedByRook(const ArrayBoard&, int, bool);
     template <typename Comp>
-    static bool where_is_rook(const ArrayBoard&, int, Comp,int, bool);
+    static bool WhereIsRook(const ArrayBoard&, int, Comp, int, bool);
 
-    static bool is_enemy_king_close(const ArrayBoard&, int, bool);
-private:
-
-    static void what_castling(MoveMap& ,const ArrayBoard&, int, int);
+    static bool IsEnemyKingClose(const ArrayBoard&, int, bool);
 };
 
-#endif // KING_H
+#endif  // KING_H
