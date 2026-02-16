@@ -3,8 +3,6 @@
 #include <array>
 
 #include "config.h"
-// #include <cstdint>
-
 enum class GameResultStatus { kWhiteWin, kBlackWin, kStalemate, kPlayingNow, kNotStarted };
 
 enum class FiguresName {
@@ -16,13 +14,57 @@ enum class FiguresName {
     kQueen,
 };
 
+struct Move {
+    int from;
+    int to;
+    MoveTypes type;
+};
+struct MoveList {
+    std::array<Move, 256> moves;  // a little bit more move than max(218)
+
+    int count = 0;
+
+    void push_back(const Move& m) {
+        moves[count++] = m;
+    }
+
+    Move* begin() {
+        return &moves[0];
+    }
+    Move* end() {
+        return &moves[count];
+    }
+
+    const Move* begin() const {
+        return &moves[0];
+    }
+    const Move* end() const {
+        return &moves[count];
+    }
+
+    bool empty() const {
+        return count == 0;
+    }
+    int size() const {
+        return count;
+    }
+
+    Move& operator[](int index) {
+        return moves[index];
+    }
+    const Move& operator[](int index) const {
+        return moves[index];
+    }
+};
 class Board {
     int black_king_index_;
     int white_king_index_;
     int count_50rule_draw_ = 0;
     bool is_white_turn_to_move_ = true;
     bool is_white_pov_;
-    std::array<bool, 64> is_in_start_pos_board_;
+    std::array<bool, 6> is_in_start_pos_board_;  // is_in_start_pos_board_{WhiteKing,BlackKing
+                                                 // LeftBottomRook, RightBottomRook,
+                                                 // LeftTopRook, RightTopRook}
     std::array<Figures, 64> board_;
     IndexPair promote_pawn_index_;
     MoveMap index_pair_map_;
@@ -38,7 +80,7 @@ class Board {
     static uint64_t zobrist_castling_[4];    // WK, WQ, BK, BQ
     static uint64_t zobrist_en_passant_[8];  // 8 files
 
-    struct MoveInfo {
+    struct MoveUndoInfo {
         MoveTypes move_type;
         Figures our_figure;
         Figures additional_figure = Figures::kNone;
@@ -47,9 +89,21 @@ class Board {
         int to_square;
         uint64_t hash_snapshot;
     };
-    std::vector<MoveInfo> history_;
+
+    std::vector<MoveUndoInfo> history_;
+    int QuiescenceSearch(int, int);
+    int GetFigureValue(Figures figure);
+    MoveList GenerateMoves();
+    MoveList GenerateCaptures();
 
 public:
+    int Evaluate();
+    int Negamax(int, int, int);
+    void MakeBotMove(Move bot_move);
+
+    long long Perft(int depth);
+
+    Move SearchRoot(int depth);
     static Figures NameToFigure(FiguresName, bool);
     void SquareMove(int);
 

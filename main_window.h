@@ -34,6 +34,8 @@ private:
     Ui::MainWindow* ui;
     int current_x_index = 0;
     int current_y_index = 0;
+    bool is_white_pov;
+    bool computer_move;
     int start_x_pos_ = 0;
     int start_y_pos_ = 0;
     int cell_size_ = 0;
@@ -56,6 +58,9 @@ private:
     void DrawFigures(QPainter&);
     void DrawChoosingSideButtons(QPainter&);
     void DrawUndoMoveButton(QPainter&);
+    void RunBenchmark();
+private slots:
+    void OnComputerTurn();
 
 protected:
     void paintEvent(QPaintEvent*) override;

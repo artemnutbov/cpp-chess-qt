@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(my_chess_game VERSION 0.1 LANGUAGES CXX)
-
+if(CMAKE_BUILD_TYPE MATCHES "Release")
+    add_compile_options(-O3 -march=native)
+endif()
 set(BOOST_ROOT "C:/Libraries/boost_1_89_0")
 include_directories(${BOOST_ROOT})
 

@@ -1,8 +1,7 @@
 #include "king.h"
 
-bool King::IsKingUnderAttack(
-    const ArrayBoard& board, int start_square, bool is_white_pov,
-    bool is_white) {  // need to rewrite bcs it is awful to take 2 int instead of  std::pair
+bool King::IsKingUnderAttack(const ArrayBoard& board, int start_square, bool is_white_pov,
+                             bool is_white) {
     if (IsAttackedByKnight(board, start_square, is_white) ||
         IsAttackedByBishop(board, start_square, is_white) ||
         IsAttackedByRook(board, start_square, is_white) ||
@@ -11,7 +10,12 @@ bool King::IsKingUnderAttack(
         return true;
     return false;
 }
-
+bool King::IsFreeToMove(const ArrayBoard& board, int start_square, bool is_white) {
+    if (IsAttackedByBishop(board, start_square, is_white) ||
+        IsAttackedByRook(board, start_square, is_white))
+        return true;
+    return false;
+}
 bool King::IsAttackedByPawn(const ArrayBoard& board, int start_square, bool is_white_pov,
                             bool is_white) {
     bool is_go_up = is_white ? is_white_pov : !is_white_pov;
@@ -193,7 +197,7 @@ bool King::IsEnemyKingClose(const ArrayBoard& board, int start_square, bool is_w
 }
 
 void King::GetKingMoves(MoveMap& map, const ArrayBoard& board,
-                        const std::array<bool, 64>& is_in_start_pos_board, int start_square,
+                        const std::array<bool, 6>& is_in_start_pos_board, int start_square,
                         bool is_white_pov, bool is_white) {
     int offsets[] = {-9, -8, -7, -1, 1, 7, 8, 9};
     int move_square = start_square;
@@ -221,12 +225,15 @@ void King::GetKingMoves(MoveMap& map, const ArrayBoard& board,
     }
 
     Figures rook = (is_white) ? Figures::kWhiteRook : Figures::kBlackRook;
-
+    bool is_king_start_pos = is_white ? is_in_start_pos_board[0] : is_in_start_pos_board[1];
     if (is_white_pov) {
-        if (is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8 + 7] == rook) {
+        bool is_rook_start_pos = is_white
+                                     ? is_in_start_pos_board[3]
+                                     : is_in_start_pos_board[5];  // RightBottomRook or RightTopRook
+        if (is_king_start_pos && board[(start_square >> 3) * 8 + 7] == rook) {
             if (board[start_square + 1] == Figures::kNone &&
                 board[start_square + 2] == Figures::kNone) {
-                if (is_in_start_pos_board[(start_square >> 3) * 8 + 7] &&
+                if (is_rook_start_pos &&  // is_in_start_pos_board[(start_square >> 3) * 8 + 7]
                     !IsKingUnderAttack(board, start_square, is_white_pov, is_white) &&
                     !IsKingUnderAttack(board, start_square + 1, is_white_pov, is_white) &&
                     !IsKingUnderAttack(board, start_square + 2, is_white_pov, is_white)) {
@@ -234,11 +241,13 @@ void King::GetKingMoves(MoveMap& map, const ArrayBoard& board,
                 }
             }
         }
-        if (is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8] == rook) {
+        is_rook_start_pos = is_white ? is_in_start_pos_board[2]
+                                     : is_in_start_pos_board[4];  // LeftBottomRook or LeftTopRook
+        if (is_king_start_pos && board[(start_square >> 3) * 8] == rook) {
             if (board[start_square - 1] == Figures::kNone &&
                 board[start_square - 2] == Figures::kNone &&
                 board[start_square - 3] == Figures::kNone) {
-                if (is_in_start_pos_board[(start_square >> 3) * 8] &&
+                if (is_rook_start_pos &&  // is_in_start_pos_board[(start_square >> 3) * 8]
                     !IsKingUnderAttack(board, start_square, is_white_pov,
                                        is_white)  // not sure about + 7 !!!
                     && !IsKingUnderAttack(board, start_square - 1, is_white_pov, is_white) &&
@@ -249,10 +258,13 @@ void King::GetKingMoves(MoveMap& map, const ArrayBoard& board,
             }
         }
     } else {
-        if (is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8] == rook) {
+        bool is_rook_start_pos = !is_white
+                                     ? is_in_start_pos_board[2]
+                                     : is_in_start_pos_board[4];  // LeftBottomRook or LeftTopRook
+        if (is_king_start_pos && board[(start_square >> 3) * 8] == rook) {
             if (board[start_square - 1] == Figures::kNone &&
                 board[start_square - 2] == Figures::kNone) {
-                if (is_in_start_pos_board[(start_square >> 3) * 8] &&
+                if (is_rook_start_pos &&  // is_in_start_pos_board[(start_square >> 3) * 8]
                     !IsKingUnderAttack(board, start_square, is_white_pov, is_white) &&
                     !IsKingUnderAttack(board, start_square - 1, is_white_pov, is_white) &&
                     !IsKingUnderAttack(board, start_square - 2, is_white_pov, is_white)) {
@@ -260,12 +272,14 @@ void King::GetKingMoves(MoveMap& map, const ArrayBoard& board,
                 }
             }
         }
-
-        if (is_in_start_pos_board[start_square] && board[(start_square >> 3) * 8 + 7] == rook) {
+        is_rook_start_pos = !is_white
+                                ? is_in_start_pos_board[3]
+                                : is_in_start_pos_board[5];  // RightBottomRook or RightTopRook
+        if (is_king_start_pos && board[(start_square >> 3) * 8 + 7] == rook) {
             if (board[start_square + 1] == Figures::kNone &&
                 board[start_square + 2] == Figures::kNone &&
                 board[start_square + 3] == Figures::kNone) {
-                if (is_in_start_pos_board[(start_square >> 3) * 8 + 7] &&
+                if (is_rook_start_pos &&  // is_in_start_pos_board[(start_square >> 3) * 8 + 7]
                     !IsKingUnderAttack(board, start_square, is_white_pov,
                                        is_white)  // not sure about + 7 !!!
                     && !IsKingUnderAttack(board, start_square + 1, is_white_pov, is_white) &&

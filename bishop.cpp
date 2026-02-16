@@ -1,19 +1,18 @@
 #include "bishop.h"
 
-void Bishop::GetBishopMoves(MoveMap& map, const ArrayBoard& board, int current_i) {
-    WhatToDoWhithFigure(map, board, current_i, -9);
+void Bishop::GetBishopMoves(MoveMap& map, const ArrayBoard& board, int start_square) {
+    WhatToDoWhithFigure(map, board, start_square, -9);
 
-    WhatToDoWhithFigure(map, board, current_i, -7);
+    WhatToDoWhithFigure(map, board, start_square, -7);
 
-    WhatToDoWhithFigure(map, board, current_i, 9);
+    WhatToDoWhithFigure(map, board, start_square, 9);
 
-    WhatToDoWhithFigure(map, board, current_i, 7);
+    WhatToDoWhithFigure(map, board, start_square, 7);
 }
 
 void Bishop::WhatToDoWhithFigure(MoveMap& map, const ArrayBoard& board, int start_square,
                                  int step) {
     int move_square = start_square;
-
     bool is_last_legal_move = false;
     if ((step == 9 || step == -7) && (move_square & 7) == 7) is_last_legal_move = true;
     if ((step == 7 || step == -9) && (move_square & 7) == 0) is_last_legal_move = true;

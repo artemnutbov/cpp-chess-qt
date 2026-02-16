@@ -4,8 +4,7 @@
 
 class Pawn {
 public:
-    static void GetPawnMoves(MoveMap&, const ArrayBoard&, const std::array<bool, 64>&, int, int,
-                             bool, bool);
+    static void GetPawnMoves(MoveMap&, const ArrayBoard&, int, int, bool, bool);
 };
 
 #endif  // PAWN_H

@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QPainter>
 #include <QPainterPath>
+#include <QTimer>
+#include <chrono>
 
 #include "./ui_main_window.h"
 
@@ -76,7 +78,6 @@ void MainWindow::SetUp() {
     promote_figures_[2] = FiguresName::kKnight;
     promote_figures_[3] = FiguresName::kQueen;
     Board::InitZobrist();
-    // board.SetUp(true);
 }
 
 void MainWindow::DrawResult(QPainter& p) {
@@ -276,6 +277,34 @@ void MainWindow::paintEvent(QPaintEvent*) {
     }
 }
 
+void MainWindow::RunBenchmark() {  // test function
+    int depth = 5;
+
+    qDebug() << "Starting Benchmark at Depth " << depth << "...";
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    long nodes = board_.Perft(depth);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+    qDebug() << "Time taken: " << duration << " ms " << nodes;
+}
+void MainWindow::OnComputerTurn() {
+    computer_move = true;
+
+    // RunBenchmark();
+
+    board_.MakeBotMove(board_.SearchRoot(4));  // call computer move
+
+    update();
+    // need to check game status
+    computer_move = false;
+}
+
 void MainWindow::mousePressEvent(QMouseEvent* event) {
     // check for click
     if (board_.GetGameState() != GameResultStatus::kPlayingNow &&
@@ -288,14 +317,19 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
         case ClickGameState::kChoosePlaySide: {
             if (white_button_rect_.contains(pos)) {
                 board_.SetUp(true);
+                computer_move = false;
                 click_state_ = ClickGameState::kNone;
             } else if (black_button_rect_.contains(pos)) {
+                computer_move = true;
                 board_.SetUp(false);
+                QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
+
                 click_state_ = ClickGameState::kNone;
             }
             break;
         }
         case ClickGameState::kNone: {
+            if (computer_move) return;
             if (area.contains(pos)) {
                 current_x_index = (pos.x() - start_x_pos_) / 60;
                 current_y_index = (pos.y() - start_y_pos_) / 60;
@@ -310,6 +344,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             break;
         }
         case ClickGameState::kChoosingFigure: {
+            if (computer_move) return;
             if (!area.contains(pos)) {
                 return;
             }
@@ -326,7 +361,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
                 click_state_ = ClickGameState::kNone;
                 board_.SetResultState();
             }
-
+            QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             break;
         }
 
