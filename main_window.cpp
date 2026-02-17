@@ -278,27 +278,29 @@ void MainWindow::paintEvent(QPaintEvent*) {
 }
 
 void MainWindow::RunBenchmark() {  // test function
-    int depth = 5;
+    int depth = 6;
 
     qDebug() << "Starting Benchmark at Depth " << depth << "...";
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    long nodes = board_.Perft(depth);
+    board_.MakeBotMove(board_.SearchRoot(depth));  // call computer move
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
-    qDebug() << "Time taken: " << duration << " ms " << nodes;
+    // qDebug() << "Time taken: " << duration << " ms " << nodes;
+
+    qDebug() << "Time taken: " << duration << " ms ";
 }
 void MainWindow::OnComputerTurn() {
     computer_move = true;
 
-    // RunBenchmark();
+    RunBenchmark();
 
-    board_.MakeBotMove(board_.SearchRoot(4));  // call computer move
+    // board_.MakeBotMove(board_.SearchRoot(4));  // call computer move
 
     update();
     // need to check game status

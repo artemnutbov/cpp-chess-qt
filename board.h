@@ -97,6 +97,7 @@ class Board {
     MoveList GenerateCaptures();
 
 public:
+    int RankMove(const Move& move);  // rate moves
     int Evaluate();
     int Negamax(int, int, int);
     void MakeBotMove(Move bot_move);

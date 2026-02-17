@@ -1,6 +1,7 @@
 #include "board.h"
 
 #include <QDebug>
+#include <algorithm>
 
 #include "bishop.h"
 #include "king.h"
@@ -9,7 +10,6 @@
 #include "queen.h"
 #include "random"
 #include "rook.h"
-
 uint64_t Board::zobrist_pieces_[12][64];
 uint64_t Board::zobrist_side_to_move_;
 uint64_t Board::zobrist_castling_[4];
@@ -85,6 +85,8 @@ int Board::QuiescenceSearch(int alpha, int beta) {
     if (stand_pat > alpha) alpha = stand_pat;
 
     auto moves = GenerateCaptures();
+    std::sort(moves.begin(), moves.end(),
+              [&](const Move& a, const Move& b) { return RankMove(a) > RankMove(b); });
 
     for (const auto& move : moves) {
         MakeBotMove(move);
@@ -102,6 +104,18 @@ int Board::QuiescenceSearch(int alpha, int beta) {
     }
 
     return alpha;
+}
+
+int Board::RankMove(const Move& move) {
+    if (move.type == MoveTypes::kCapture || move.type == MoveTypes::kPromoteCapture) {
+        // most valuable victim - least valuable attacker
+        int victim_value = GetFigureValue(board_[move.to]);
+        int attacker_value = GetFigureValue(board_[move.from]);
+
+        return 10 * victim_value - attacker_value + 10000;  // +10000 bc captures are first
+    }
+
+    return 0;
 }
 
 int Board::Evaluate() {
@@ -225,7 +239,9 @@ int Board::Negamax(int depth, int alpha, int beta) {
     if (depth == 0) return QuiescenceSearch(alpha, beta);
 
     auto moves = GenerateMoves();
-
+    std::sort(moves.begin(), moves.end(), [&](const Move& a, const Move& b) {
+        return ScoreMove(a) > ScoreMove(b);  // Descending order (Best first)
+    });
     if (moves.empty()) {
         int king_idx = is_white_turn_to_move_ ? white_king_index_ : black_king_index_;
         bool in_check =
@@ -815,7 +831,7 @@ void Board::UndoMove() {
     if (history_.empty()) return;
     MoveUndoInfo last_move = history_.back();
     std::swap(board_[last_move.to_square], board_[last_move.from_square]);
-
+    // board_[last_move.from_square] = last_move.our_figure;
     is_white_turn_to_move_ = !is_white_turn_to_move_;
     if (last_move.move_type == MoveTypes::kCapture ||
         last_move.move_type == MoveTypes::kPromoteCapture)
@@ -854,7 +870,7 @@ void Board::UndoMove() {
         else
             board_[last_move.to_square - 8] = last_move.additional_figure;
     }
-    if (last_move.move_type == MoveTypes::kMoveToEmptySquare ||
+    if (last_move.move_type == MoveTypes::kPromoteToEmptySquare ||
         last_move.move_type == MoveTypes::kPromoteCapture) {
         board_[last_move.from_square] = last_move.our_figure;
     }
