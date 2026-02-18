@@ -6,7 +6,7 @@ public:
     static void GetKingMoves(MoveMap&, const ArrayBoard&, const std::array<bool, 6>&, int, bool,
                              bool);
     static bool IsKingUnderAttack(const ArrayBoard&, int, bool, bool);
-    static bool IsFreeToMove(const ArrayBoard&, int, bool);
+    static bool IsFreeToMove(const ArrayBoard&, int, bool, bool);
 
 private:
     static bool IsAttackedByPawn(const ArrayBoard&, int, bool, bool);

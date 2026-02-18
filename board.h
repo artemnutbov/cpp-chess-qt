@@ -18,6 +18,9 @@ struct Move {
     int from;
     int to;
     MoveTypes type;
+    bool operator==(const Move& other) const {
+        return from == other.from && to == other.to && type == other.type;
+    }
 };
 struct MoveList {
     std::array<Move, 256> moves;  // a little bit more move than max(218)
@@ -48,7 +51,6 @@ struct MoveList {
     int size() const {
         return count;
     }
-
     Move& operator[](int index) {
         return moves[index];
     }
@@ -95,6 +97,10 @@ class Board {
     int GetFigureValue(Figures figure);
     MoveList GenerateMoves();
     MoveList GenerateCaptures();
+
+    int current_root_depth_;
+    Move best_root_move_;  // best move from the previous completed depth
+    Move current_depth_best_move_;
 
 public:
     int RankMove(const Move& move);  // rate moves

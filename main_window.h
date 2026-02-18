@@ -34,7 +34,6 @@ private:
     Ui::MainWindow* ui;
     int current_x_index = 0;
     int current_y_index = 0;
-    bool is_white_pov;
     bool computer_move;
     int start_x_pos_ = 0;
     int start_y_pos_ = 0;

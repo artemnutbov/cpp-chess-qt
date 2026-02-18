@@ -107,12 +107,19 @@ int Board::QuiescenceSearch(int alpha, int beta) {
 }
 
 int Board::RankMove(const Move& move) {
+    if (move == best_root_move_) {
+        return 30000;
+    }
     if (move.type == MoveTypes::kCapture || move.type == MoveTypes::kPromoteCapture) {
         // most valuable victim - least valuable attacker
         int victim_value = GetFigureValue(board_[move.to]);
         int attacker_value = GetFigureValue(board_[move.from]);
 
         return 10 * victim_value - attacker_value + 10000;  // +10000 bc captures are first
+    }
+
+    if (move.type == MoveTypes::kPromoteToEmptySquare) {
+        return 9000;
     }
 
     return 0;
@@ -128,7 +135,7 @@ int Board::Evaluate() {
         int position = 0;
 
         bool is_white = Config::FigureToSide(board_[i]);
-
+        if (!is_white_pov_) is_white = !is_white;
         // for black we must mirror the index (i ^ 56) to flip the board
         int square_idx = is_white ? i : (i ^ 56);
 
@@ -239,22 +246,30 @@ int Board::Negamax(int depth, int alpha, int beta) {
     if (depth == 0) return QuiescenceSearch(alpha, beta);
 
     auto moves = GenerateMoves();
-    std::sort(moves.begin(), moves.end(), [&](const Move& a, const Move& b) {
-        return ScoreMove(a) > ScoreMove(b);  // Descending order (Best first)
-    });
+    std::sort(moves.begin(), moves.end(),
+              [&](const Move& a, const Move& b) { return RankMove(a) > RankMove(b); });
     if (moves.empty()) {
         int king_idx = is_white_turn_to_move_ ? white_king_index_ : black_king_index_;
         bool in_check =
             King::IsKingUnderAttack(board_, king_idx, is_white_pov_, is_white_turn_to_move_);
-        // need to add to this 50move rule and draw by repetition
         if (in_check) {
             // checkmate
-            return -49000 + depth;
+            return -49000 - depth;
         } else {
             // stalemate
             return 0;
         }
     }
+    // auto penultimate_it = history_.back();
+    // if (penultimate_it.additional_figure != Figures::kNone ||
+    //     penultimate_it.our_figure == Figures::kWhitePawn ||
+    //     penultimate_it.our_figure == Figures::kBlackPawn) {
+    //     count_50rule_draw_ = 0;
+    // }
+    // if (count_50rule_draw_ == 100 ) {
+    //     return 0;
+    // }
+    if (IsRepetition()) return 0;
 
     int max_score = -50000;
 
@@ -268,6 +283,9 @@ int Board::Negamax(int depth, int alpha, int beta) {
 
         if (score > max_score) {
             max_score = score;
+            if (depth == current_root_depth_) {
+                current_depth_best_move_ = move;  // found a better move for THIS depth!
+            }
         }
 
         // alpha beta logic
@@ -282,34 +300,31 @@ int Board::Negamax(int depth, int alpha, int beta) {
     return max_score;
 }
 
-Move Board::SearchRoot(int depth) {
-    int alpha = -50000;  // negative infinity
-    int beta = 50000;    // positive infinity
+Move Board::SearchRoot(int max_time_ms) {
+    best_root_move_ = Move();
+    Move final_best_move;
+    auto start_time = std::chrono::high_resolution_clock::now();
+    // iterative deepening loop
+    for (int depth = 1; depth <= 100; ++depth) {
+        current_root_depth_ = depth;
 
-    Move best_move;
-    int max_score = -50000;
+        int score = Negamax(depth, -50000, 50000);
 
-    auto moves = GenerateMoves();
+        final_best_move = current_depth_best_move_;
+        best_root_move_ = final_best_move;
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(end - start_time).count();
 
-    for (auto& move : moves) {
-        MakeBotMove(move);
+        qDebug() << "Depth" << depth << " finished. Score:" << score << " Time:" << duration
+                 << "ms";
 
-        // recursive call
-        int score = -Negamax(depth - 1, -beta, -alpha);
-
-        UndoMove();
-
-        if (score > max_score) {
-            max_score = score;
-            best_move = move;
-        }
-
-        if (score > alpha) {
-            alpha = score;
+        // if we have used more than 25% of our time
+        if (duration * 4 > max_time_ms) {
+            break;
         }
     }
-
-    return best_move;
+    return final_best_move;  // returns the move from the last completed depth
 }
 
 void Board::MakeBotMove(Move bot_move) {
@@ -628,7 +643,7 @@ void Board::SquareMove(int start_square) {
         Bishop::GetBishopMoves(index_pair_map_, board_, start_square);
     else if (current_name == Figures::kBlackPawn || current_name == Figures::kWhitePawn) {
         bool is_en_passant = false;
-        MoveUndoInfo last_move = *std::prev(history_.end());
+        MoveUndoInfo last_move = history_.back();
         if ((last_move.our_figure == Figures::kBlackPawn ||
              last_move.our_figure == Figures::kWhitePawn)) {
             int distance = abs((last_move.from_square >> 3) - (last_move.to_square >> 3));
@@ -661,14 +676,14 @@ void Board::AllFigureMove(int start_square) {
                 board_[it.first] = Figures::kNone;
 
                 std::swap(board_[start_square], board_[it.first]);
-                bool is_in_check = King::IsFreeToMove(board_, king_index,
+                bool is_in_check = King::IsFreeToMove(board_, king_index, is_white_pov_,
                                                       Config::FigureToSide(board_[king_index]));
                 std::swap(board_[start_square], board_[it.first]);
                 board_[it.first] = tmp;
                 if (is_in_check) index_pair_map_.erase(it.first);
             } else {
                 std::swap(board_[start_square], board_[it.first]);
-                bool is_in_check = King::IsFreeToMove(board_, king_index,
+                bool is_in_check = King::IsFreeToMove(board_, king_index, is_white_pov_,
                                                       Config::FigureToSide(board_[king_index]));
                 std::swap(board_[start_square], board_[it.first]);
                 if (is_in_check) index_pair_map_.erase(it.first);
@@ -710,10 +725,10 @@ void Board::SetResultState() {
         qDebug() << "Draw by Repetition!";
         return;
     } else {  // 100 bsc 50 for white and 50 for black
-        auto penultimate_it = std::prev(history_.end());
-        if (penultimate_it->additional_figure != Figures::kNone ||
-            penultimate_it->our_figure == Figures::kWhitePawn ||
-            penultimate_it->our_figure == Figures::kBlackPawn) {
+        auto penultimate = history_.back();
+        if (penultimate.additional_figure != Figures::kNone ||
+            penultimate.our_figure == Figures::kWhitePawn ||
+            penultimate.our_figure == Figures::kBlackPawn) {
             count_50rule_draw_ = 0;
         }
         if (count_50rule_draw_ == 100) {
@@ -925,7 +940,7 @@ void Board::UndoMove() {
                 break;
         }
     }
-
+    if (count_50rule_draw_ != 0) --count_50rule_draw_;
     current_hash_ = last_move.hash_snapshot;
     history_.pop_back();
 }

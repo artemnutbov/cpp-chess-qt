@@ -278,14 +278,13 @@ void MainWindow::paintEvent(QPaintEvent*) {
 }
 
 void MainWindow::RunBenchmark() {  // test function
-    int depth = 6;
+    // int depth = 4;
 
-    qDebug() << "Starting Benchmark at Depth " << depth << "...";
+    // qDebug() << "Starting Benchmark at Depth " << depth << "...";
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    board_.MakeBotMove(board_.SearchRoot(depth));  // call computer move
-
+    board_.MakeBotMove(board_.SearchRoot(5000));  // call computer move
     auto end_time = std::chrono::high_resolution_clock::now();
 
     auto duration =
@@ -299,6 +298,7 @@ void MainWindow::OnComputerTurn() {
     computer_move = true;
 
     RunBenchmark();
+    board_.SetResultState();
 
     // board_.MakeBotMove(board_.SearchRoot(4));  // call computer move
 
@@ -322,9 +322,9 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
                 computer_move = false;
                 click_state_ = ClickGameState::kNone;
             } else if (black_button_rect_.contains(pos)) {
-                computer_move = true;
                 board_.SetUp(false);
-                QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
+                computer_move = true;
+                QTimer::singleShot(1000, this, &MainWindow::OnComputerTurn);
 
                 click_state_ = ClickGameState::kNone;
             }
@@ -362,12 +362,14 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             } else {
                 click_state_ = ClickGameState::kNone;
                 board_.SetResultState();
+                if (board_.GetGameState() == GameResultStatus::kPlayingNow)
+                    QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             }
-            QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             break;
         }
 
         case ClickGameState::kChooseFigureToPromote: {
+            if (computer_move) return;
             int promote_index = board_.GetPromoteIndex();
             if ((promote_index >> 3) == 7) promote_index -= 3 * 8;
             QRect area_of_promote_figures_(
@@ -387,6 +389,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             }
             click_state_ = ClickGameState::kNone;
             board_.SetResultState();
+
+            QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             break;
         }
         default:

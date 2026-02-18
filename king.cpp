@@ -10,9 +10,12 @@ bool King::IsKingUnderAttack(const ArrayBoard& board, int start_square, bool is_
         return true;
     return false;
 }
-bool King::IsFreeToMove(const ArrayBoard& board, int start_square, bool is_white) {
+bool King::IsFreeToMove(const ArrayBoard& board, int start_square, bool is_white_pov,
+                        bool is_white) {
     if (IsAttackedByBishop(board, start_square, is_white) ||
-        IsAttackedByRook(board, start_square, is_white))
+        IsAttackedByRook(board, start_square, is_white) ||
+        IsAttackedByKnight(board, start_square, is_white) ||
+        IsAttackedByPawn(board, start_square, is_white_pov, is_white))
         return true;
     return false;
 }
