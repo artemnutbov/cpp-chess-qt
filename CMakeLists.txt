@@ -4,8 +4,13 @@ project(my_chess_game VERSION 0.1 LANGUAGES CXX)
 if(CMAKE_BUILD_TYPE MATCHES "Release")
     add_compile_options(-O3 -march=native)
 endif()
-set(BOOST_ROOT "C:/Libraries/boost_1_89_0")
-include_directories(${BOOST_ROOT})
+# for Windows
+if(WIN32)
+    set(BOOST_ROOT "C:/Libraries/boost_1_89_0")
+endif()
+
+# for Linux
+find_package(Boost REQUIRED)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -51,7 +56,8 @@ add_library(ChessLogic STATIC ${LOGIC_SOURCES})
 target_link_libraries(ChessLogic PUBLIC Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_include_directories(ChessLogic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
+# boost
+target_link_libraries(ChessLogic PUBLIC Boost::boost)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(my_chess_game MANUAL_FINALIZATION ${GUI_SOURCES})
@@ -88,7 +94,6 @@ set_target_properties(my_chess_game PROPERTIES
 enable_testing()
 
 add_executable(chess_tests tests/test_main.cpp)
-
 target_link_libraries(chess_tests PRIVATE ChessLogic GTest::gtest_main Qt${QT_VERSION_MAJOR}::Widgets)
 
 include(GoogleTest)

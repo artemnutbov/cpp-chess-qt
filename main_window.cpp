@@ -38,32 +38,19 @@ QPixmap MainWindow::CreateImage(const char* path, bool is_white) {
     return img;
 }
 void MainWindow::SetUpImages() {
-    images_map_[Figures::kWhitePawn] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/white_pawn.png", true);
-    images_map_[Figures::kWhiteBishop] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/white_bishop.png", true);
-    images_map_[Figures::kWhiteKnight] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/white_knight.png", true);
-    images_map_[Figures::kWhiteRook] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/white_rook.png", true);
-    images_map_[Figures::kWhiteQueen] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/white_queen.png", true);
+    images_map_[Figures::kWhitePawn] = CreateImage(":/img/images/white_pawn.png", true);
+    images_map_[Figures::kWhiteBishop] = CreateImage(":/img/images/white_bishop.png", true);
+    images_map_[Figures::kWhiteKnight] = CreateImage(":/img/images/white_knight.png", true);
+    images_map_[Figures::kWhiteRook] = CreateImage(":/img/images/white_rook.png", true);
+    images_map_[Figures::kWhiteQueen] = CreateImage(":/img/images/white_queen.png", true);
+    images_map_[Figures::kWhiteKing] = CreateImage(":/img/images/white_king.png", true);
 
-    images_map_[Figures::kWhiteKing] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/white_king.png", true);
-
-    images_map_[Figures::kBlackPawn] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/black_pawn.png", false);
-    images_map_[Figures::kBlackBishop] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/black_bishop.png", false);
-    images_map_[Figures::kBlackKnight] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/black_knight.png", false);
-    images_map_[Figures::kBlackRook] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/black_rook.png", false);
-    images_map_[Figures::kBlackQueen] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/black_queen.png", false);
-    images_map_[Figures::kBlackKing] =
-        CreateImage("C:/Users/38096/Documents/my_chess_game/images/black_king.png", false);
+    images_map_[Figures::kBlackPawn] = CreateImage(":/img/images/black_pawn.png", false);
+    images_map_[Figures::kBlackBishop] = CreateImage(":/img/images/black_bishop.png", false);
+    images_map_[Figures::kBlackKnight] = CreateImage(":/img/images/black_knight.png", false);
+    images_map_[Figures::kBlackRook] = CreateImage(":/img/images/black_rook.png", false);
+    images_map_[Figures::kBlackQueen] = CreateImage(":/img/images/black_queen.png", false);
+    images_map_[Figures::kBlackKing] = CreateImage(":/img/images/black_king.png", false);
 }
 void MainWindow::SetUp() {
     // coordinates_board_ SetUp
