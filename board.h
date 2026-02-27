@@ -115,7 +115,7 @@ public:
     void SquareMove(int);
 
     void UndoMove();
-    void SetUp(bool);
+    void SetUp();
     void AllFigureMove(int);
     void Promotion(FiguresName, bool);
     bool ActionMove(int, int);
@@ -133,7 +133,8 @@ public:
     int GetKingIndex(bool) const;
     int GetPromoteIndex() const;
     bool GetWhitePov() const;
-    Board();
+
+    Board(bool);
 };
 
 #endif  // BOARD_H

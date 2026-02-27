@@ -15,9 +15,58 @@ uint64_t Board::zobrist_side_to_move_;
 uint64_t Board::zobrist_castling_[4];
 uint64_t Board::zobrist_en_passant_[8];
 
-Board::Board() : game_result_status_(GameResultStatus::kNotStarted) {
+Board::Board(bool is_white_pov)
+    : is_white_pov_(is_white_pov), game_result_status_(GameResultStatus::kNotStarted) {
     board_.fill(Figures::kNone);
     is_in_start_pos_board_.fill(true);
+    SetUp();
+    InitZobrist();
+}
+
+void Board::SetUp() {
+    history_.reserve(100);  // reserve a little bigger than avg moves
+    game_result_status_ = GameResultStatus::kPlayingNow;
+    int white_pov_pieces_rank = is_white_pov_ ? 7 * 8 : 0;
+    int black_pov_pieces_rank = !is_white_pov_ ? 7 * 8 : 0;
+
+    int white_pov_pawns_rank = is_white_pov_ ? 6 * 8 : 1 * 8;
+    int black_pov_pawns_rank = !is_white_pov_ ? 6 * 8 : 1 * 8;
+
+    white_king_index_ = is_white_pov_ ? white_pov_pieces_rank + 4 : white_pov_pieces_rank + 3;
+    black_king_index_ = is_white_pov_ ? black_pov_pieces_rank + 4 : black_pov_pieces_rank + 3;
+
+    board_[white_pov_pieces_rank + 2] = Figures::kWhiteBishop;
+    board_[white_pov_pieces_rank + 5] = Figures::kWhiteBishop;
+
+    board_[white_pov_pieces_rank + 1] = Figures::kWhiteKnight;
+    board_[white_pov_pieces_rank + 6] = Figures::kWhiteKnight;
+
+    board_[white_pov_pieces_rank + 0] = Figures::kWhiteRook;
+    board_[white_pov_pieces_rank + 7] = Figures::kWhiteRook;
+
+    board_[white_king_index_] = Figures::kWhiteKing;
+    board_[is_white_pov_ ? white_pov_pieces_rank + 3 : white_pov_pieces_rank + 4] =
+        Figures::kWhiteQueen;
+
+    board_[black_pov_pieces_rank + 0] = Figures::kBlackRook;
+    board_[black_pov_pieces_rank + 7] = Figures::kBlackRook;
+
+    board_[black_pov_pieces_rank + 2] = Figures::kBlackBishop;
+    board_[black_pov_pieces_rank + 5] = Figures::kBlackBishop;
+
+    board_[black_pov_pieces_rank + 1] = Figures::kBlackKnight;
+    board_[black_pov_pieces_rank + 6] = Figures::kBlackKnight;
+
+    board_[black_king_index_] = Figures::kBlackKing;
+    board_[is_white_pov_ ? black_pov_pieces_rank + 3 : black_pov_pieces_rank + 4] =
+        Figures::kBlackQueen;
+
+    for (size_t i = 0; i < 8; ++i) {
+        board_[white_pov_pawns_rank + i] = Figures::kWhitePawn;
+        board_[black_pov_pawns_rank + i] = Figures::kBlackPawn;
+    }
+
+    current_hash_ = ComputeHash();
 }
 
 int Board::GetFigureValue(Figures figure) {
@@ -320,7 +369,7 @@ Move Board::SearchRoot(int max_time_ms) {
                  << "ms";
 
         // if we have used more than 25% of our time
-        if (duration * 4 > max_time_ms) {
+        if (duration * 8 > max_time_ms) {
             break;
         }
     }
@@ -564,53 +613,6 @@ bool Board::IsRepetition() const {
 
     // current state matches (1) + found in history_ (2) = 3 total
     return count >= 2;
-}
-
-void Board::SetUp(bool white_pov) {
-    history_.reserve(100);  // reserve a little bigger than avg moves
-    is_white_pov_ = white_pov;
-    game_result_status_ = GameResultStatus::kPlayingNow;
-    int white_pov_pieces_rank = is_white_pov_ ? 7 * 8 : 0;
-    int black_pov_pieces_rank = !is_white_pov_ ? 7 * 8 : 0;
-
-    int white_pov_pawns_rank = is_white_pov_ ? 6 * 8 : 1 * 8;
-    int black_pov_pawns_rank = !is_white_pov_ ? 6 * 8 : 1 * 8;
-
-    white_king_index_ = is_white_pov_ ? white_pov_pieces_rank + 4 : white_pov_pieces_rank + 3;
-    black_king_index_ = is_white_pov_ ? black_pov_pieces_rank + 4 : black_pov_pieces_rank + 3;
-
-    board_[white_pov_pieces_rank + 2] = Figures::kWhiteBishop;
-    board_[white_pov_pieces_rank + 5] = Figures::kWhiteBishop;
-
-    board_[white_pov_pieces_rank + 1] = Figures::kWhiteKnight;
-    board_[white_pov_pieces_rank + 6] = Figures::kWhiteKnight;
-
-    board_[white_pov_pieces_rank + 0] = Figures::kWhiteRook;
-    board_[white_pov_pieces_rank + 7] = Figures::kWhiteRook;
-
-    board_[white_king_index_] = Figures::kWhiteKing;
-    board_[is_white_pov_ ? white_pov_pieces_rank + 3 : white_pov_pieces_rank + 4] =
-        Figures::kWhiteQueen;
-
-    board_[black_pov_pieces_rank + 0] = Figures::kBlackRook;
-    board_[black_pov_pieces_rank + 7] = Figures::kBlackRook;
-
-    board_[black_pov_pieces_rank + 2] = Figures::kBlackBishop;
-    board_[black_pov_pieces_rank + 5] = Figures::kBlackBishop;
-
-    board_[black_pov_pieces_rank + 1] = Figures::kBlackKnight;
-    board_[black_pov_pieces_rank + 6] = Figures::kBlackKnight;
-
-    board_[black_king_index_] = Figures::kBlackKing;
-    board_[is_white_pov_ ? black_pov_pieces_rank + 3 : black_pov_pieces_rank + 4] =
-        Figures::kBlackQueen;
-
-    for (size_t i = 0; i < 8; ++i) {
-        board_[white_pov_pawns_rank + i] = Figures::kWhitePawn;
-        board_[black_pov_pawns_rank + i] = Figures::kBlackPawn;
-    }
-
-    current_hash_ = ComputeHash();
 }
 
 int Board::GetKingIndex(bool is_white) const {

@@ -11,11 +11,8 @@
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
-      current_x_index(0),
-      current_y_index(0),
-      start_x_pos_(100),
-      start_y_pos_(70),
-      cell_size_(60),
+      current_x_index_(0),
+      current_y_index_(0),
       white_button_rect_(300, 300, cell_size_ * 3, cell_size_),
       black_button_rect_(300, 300 + cell_size_ + 3, cell_size_ * 3, cell_size_),
       gray_button_rect_(start_x_pos_ + cell_size_ * 8 + 2, start_y_pos_ + cell_size_ * 7,
@@ -34,7 +31,7 @@ QPixmap MainWindow::CreateImage(const char* path, bool is_white) {
     else
         mask = img.createMaskFromColor(Qt::white);
     img.setMask(mask);
-    img = img.scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    img = img.scaled(cell_size_, cell_size_, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     return img;
 }
 void MainWindow::SetUpImages() {
@@ -64,17 +61,16 @@ void MainWindow::SetUp() {
     promote_figures_[1] = FiguresName::kRook;
     promote_figures_[2] = FiguresName::kKnight;
     promote_figures_[3] = FiguresName::kQueen;
-    Board::InitZobrist();
 }
 
 void MainWindow::DrawResult(QPainter& p) {
     int circle_result_radius = 18;
     QPoint white_king_coordinates(
-        coordinates_board_[board_.GetKingIndex(true) >> 3][board_.GetKingIndex(true) & 7]);
+        coordinates_board_[board_->GetKingIndex(true) >> 3][board_->GetKingIndex(true) & 7]);
     QPoint black_king_coordinates(
-        coordinates_board_[board_.GetKingIndex(false) >> 3][board_.GetKingIndex(false) & 7]);
+        coordinates_board_[board_->GetKingIndex(false) >> 3][board_->GetKingIndex(false) & 7]);
 
-    switch (board_.GetGameState()) {
+    switch (board_->GetGameState()) {
         case GameResultStatus::kStalemate: {
             QColor my_transparent_gray(85, 85, 85, 230);
             p.setBrush(my_transparent_gray);
@@ -114,8 +110,8 @@ void MainWindow::DrawResult(QPainter& p) {
 void MainWindow::DrawLegalMoves(QPainter& p) {
     QColor my_transparent_yellow(245, 246, 130, 160);
     p.setBrush(my_transparent_yellow);
-    p.drawRect(coordinates_board_[current_y_index][current_x_index].x(),
-               coordinates_board_[current_y_index][current_x_index].y(), cell_size_, cell_size_);
+    p.drawRect(coordinates_board_[current_y_index_][current_x_index_].x(),
+               coordinates_board_[current_y_index_][current_x_index_].y(), cell_size_, cell_size_);
 
     QColor my_transparent_black(0, 0, 0, 20);
 
@@ -124,7 +120,7 @@ void MainWindow::DrawLegalMoves(QPainter& p) {
     int cicle_thickness = 6;
     QPainterPath path;
     p.setBrush(my_transparent_black);
-    for (const auto& it : board_.GetAllLegalMoves()) {
+    for (const auto& it : board_->GetAllLegalMoves()) {
         QPointF center_of_cell((it.first & 7) * cell_size_ + start_x_pos_ + half_cell_size_,
                                (it.first >> 3) * cell_size_ + half_cell_size_ + start_y_pos_);
 
@@ -142,10 +138,10 @@ void MainWindow::DrawLegalMoves(QPainter& p) {
 }
 
 void MainWindow::DrawFigurePromotion(QPainter& p) {
-    int promote_index = board_.GetPromoteIndex();
+    int promote_index = board_->GetPromoteIndex();
     p.setPen(Qt::NoPen);
     p.setBrush(Qt::white);
-    bool is_white_pov = board_.GetWhitePov();
+    bool is_white_pov = board_->GetWhitePov();
     if (7 == promote_index >> 3) {
         QRect promote_rect(coordinates_board_[(promote_index >> 3) - 3][promote_index & 7],
                            QSize(cell_size_, 4 * cell_size_));
@@ -235,9 +231,9 @@ void MainWindow::DrawChoosingSideButtons(QPainter& p) {
 void MainWindow::DrawFigures(QPainter& p) {
     for (size_t i = 0; i < 8; ++i) {
         for (size_t j = 0; j < 8; ++j) {
-            if (board_.ValidIndex(i * 8 + j))
+            if (board_->ValidIndex(i * 8 + j))
                 p.drawPixmap(coordinates_board_[i][j].x(), coordinates_board_[i][j].y(),
-                             images_map_[board_.GetFigure(i * 8 + j)]);
+                             images_map_[board_->GetFigure(i * 8 + j)]);
         }
     }
 }
@@ -249,8 +245,10 @@ void MainWindow::paintEvent(QPaintEvent*) {
     else {
         DrawBoardSquares(p);
 
-        if (board_.GetGameState() != GameResultStatus::kPlayingNow) DrawResult(p);
-
+        if (board_->GetGameState() != GameResultStatus::kPlayingNow) {
+            DrawResult(p);
+            QTimer::singleShot(1000, this, &MainWindow::RestartGame);
+        }
         if (click_state_ == ClickGameState::kChoosingFigure) {  // demo of on what figure you click
             DrawLegalMoves(p);
         }
@@ -264,6 +262,11 @@ void MainWindow::paintEvent(QPaintEvent*) {
     }
 }
 
+void MainWindow::RestartGame() {
+    click_state_ = ClickGameState::kChoosePlaySide;
+    board_.reset();
+}
+
 void MainWindow::RunBenchmark() {  // test function
     // int depth = 4;
 
@@ -271,7 +274,7 @@ void MainWindow::RunBenchmark() {  // test function
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    board_.MakeBotMove(board_.SearchRoot(5000));  // call computer move
+    board_->MakeBotMove(board_->SearchRoot(3000));  // call computer move
     auto end_time = std::chrono::high_resolution_clock::now();
 
     auto duration =
@@ -282,22 +285,23 @@ void MainWindow::RunBenchmark() {  // test function
     qDebug() << "Time taken: " << duration << " ms ";
 }
 void MainWindow::OnComputerTurn() {
-    computer_move = true;
+    computer_move_ = true;
 
     RunBenchmark();
-    board_.SetResultState();
+    board_->SetResultState();
 
-    // board_.MakeBotMove(board_.SearchRoot(4));  // call computer move
+    // board_->MakeBotMove(board_->SearchRoot(4));  // call computer move
 
     update();
     // need to check game status
-    computer_move = false;
+    computer_move_ = false;
 }
 
 void MainWindow::mousePressEvent(QMouseEvent* event) {
     // check for click
-    if (board_.GetGameState() != GameResultStatus::kPlayingNow &&
-        board_.GetGameState() != GameResultStatus::kNotStarted)
+    if (click_state_ != ClickGameState::kChoosePlaySide &&
+        board_->GetGameState() != GameResultStatus::kPlayingNow &&
+        board_->GetGameState() != GameResultStatus::kNotStarted)
         return;
     QPoint pos = event->pos();
     QRect area(start_x_pos_, start_y_pos_, cell_size_ * 8, cell_size_ * 8);
@@ -305,12 +309,12 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
     switch (click_state_) {
         case ClickGameState::kChoosePlaySide: {
             if (white_button_rect_.contains(pos)) {
-                board_.SetUp(true);
-                computer_move = false;
+                board_ = std::make_unique<Board>(true);
+                computer_move_ = false;
                 click_state_ = ClickGameState::kNone;
             } else if (black_button_rect_.contains(pos)) {
-                board_.SetUp(false);
-                computer_move = true;
+                board_ = std::make_unique<Board>(false);
+                computer_move_ = true;
                 QTimer::singleShot(1000, this, &MainWindow::OnComputerTurn);
 
                 click_state_ = ClickGameState::kNone;
@@ -318,46 +322,46 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             break;
         }
         case ClickGameState::kNone: {
-            if (computer_move) return;
+            if (computer_move_) return;
             if (area.contains(pos)) {
-                current_x_index = (pos.x() - start_x_pos_) / 60;
-                current_y_index = (pos.y() - start_y_pos_) / 60;
-                if (board_.ValidIndex(current_y_index * 8 + current_x_index)) {
-                    board_.AllFigureMove(current_y_index * 8 + current_x_index);
+                current_x_index_ = (pos.x() - start_x_pos_) / cell_size_;
+                current_y_index_ = (pos.y() - start_y_pos_) / cell_size_;
+                if (board_->ValidIndex(current_y_index_ * 8 + current_x_index_)) {
+                    board_->AllFigureMove(current_y_index_ * 8 + current_x_index_);
                     click_state_ = ClickGameState::kChoosingFigure;
                 }
             } else if (gray_button_rect_.contains(pos)) {
-                board_.UndoMove();
+                board_->UndoMove();
             }
 
             break;
         }
         case ClickGameState::kChoosingFigure: {
-            if (computer_move) return;
+            if (computer_move_) return;
             if (!area.contains(pos)) {
                 return;
             }
-            int new_x_index = (pos.x() - start_x_pos_) / 60;
-            int new_y_index = (pos.y() - start_y_pos_) / 60;
-            if (!board_.ActionMove(current_x_index + current_y_index * 8,
-                                   new_x_index + new_y_index * 8)) {
+            int new_x_index = (pos.x() - start_x_pos_) / cell_size_;
+            int new_y_index = (pos.y() - start_y_pos_) / cell_size_;
+            if (!board_->ActionMove(current_x_index_ + current_y_index_ * 8,
+                                    new_x_index + new_y_index * 8)) {
                 click_state_ = ClickGameState::kNone;
                 break;
             }
-            if (board_.IsPawnPromote(new_x_index + new_y_index * 8)) {
+            if (board_->IsPawnPromote(new_x_index + new_y_index * 8)) {
                 click_state_ = ClickGameState::kChooseFigureToPromote;
             } else {
                 click_state_ = ClickGameState::kNone;
-                board_.SetResultState();
-                if (board_.GetGameState() == GameResultStatus::kPlayingNow)
+                board_->SetResultState();
+                if (board_->GetGameState() == GameResultStatus::kPlayingNow)
                     QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             }
             break;
         }
 
         case ClickGameState::kChooseFigureToPromote: {
-            if (computer_move) return;
-            int promote_index = board_.GetPromoteIndex();
+            if (computer_move_) return;
+            int promote_index = board_->GetPromoteIndex();
             if ((promote_index >> 3) == 7) promote_index -= 3 * 8;
             QRect area_of_promote_figures_(
                 coordinates_board_[promote_index >> 3][promote_index & 7],
@@ -365,17 +369,17 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             if (!area_of_promote_figures_.contains(pos)) {
                 break;
             }
-            int Promotion_rank = (pos.y() - start_y_pos_) / 60;
+            int Promotion_rank = (pos.y() - start_y_pos_) / cell_size_;
             FiguresName choosen_figure_to_promote;
             if ((promote_index >> 3) == 0) {
-                board_.Promotion(*std::prev(promote_figures_.end(), 1 + Promotion_rank),
-                                 board_.GetWhitePov());
+                board_->Promotion(*std::prev(promote_figures_.end(), 1 + Promotion_rank),
+                                  board_->GetWhitePov());
             } else {
-                board_.Promotion(promote_figures_[Promotion_rank - (promote_index >> 3)],
-                                 !board_.GetWhitePov());
+                board_->Promotion(promote_figures_[Promotion_rank - (promote_index >> 3)],
+                                  !board_->GetWhitePov());
             }
             click_state_ = ClickGameState::kNone;
-            board_.SetResultState();
+            board_->SetResultState();
 
             QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             break;
