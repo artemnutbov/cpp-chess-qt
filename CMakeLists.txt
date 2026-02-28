@@ -19,8 +19,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Concurrent)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Concurrent)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -53,7 +53,7 @@ set(GUI_SOURCES
 add_library(ChessLogic STATIC ${LOGIC_SOURCES})
 
 # link Qt to logic
-target_link_libraries(ChessLogic PUBLIC Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(ChessLogic PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Concurrent)
 
 target_include_directories(ChessLogic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # boost

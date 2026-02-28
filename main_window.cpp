@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QPainterPath>
+#include <QThreadPool>
 #include <QTimer>
 #include <chrono>
 
@@ -269,7 +270,7 @@ void MainWindow::RestartGame() {
 
 void MainWindow::RunBenchmark() {  // test function
     // int depth = 4;
-
+    computer_move_ = true;
     // qDebug() << "Starting Benchmark at Depth " << depth << "...";
 
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -283,18 +284,13 @@ void MainWindow::RunBenchmark() {  // test function
     // qDebug() << "Time taken: " << duration << " ms " << nodes;
 
     qDebug() << "Time taken: " << duration << " ms ";
-}
-void MainWindow::OnComputerTurn() {
-    computer_move_ = true;
-
-    RunBenchmark();
     board_->SetResultState();
-
-    // board_->MakeBotMove(board_->SearchRoot(4));  // call computer move
-
     update();
-    // need to check game status
     computer_move_ = false;
+}
+
+void MainWindow::OnComputerTurn() {
+    QThreadPool::globalInstance()->start([this]() { RunBenchmark(); });
 }
 
 void MainWindow::mousePressEvent(QMouseEvent* event) {

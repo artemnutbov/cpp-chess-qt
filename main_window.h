@@ -58,8 +58,9 @@ private:
     void DrawFigures(QPainter&);
     void DrawChoosingSideButtons(QPainter&);
     void DrawUndoMoveButton(QPainter&);
-    void RunBenchmark();
+
 private slots:
+    void RunBenchmark();
     void OnComputerTurn();
     void RestartGame();
 
