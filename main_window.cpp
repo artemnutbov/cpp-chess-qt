@@ -10,15 +10,19 @@
 #include "./ui_main_window.h"
 
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent),
-      ui(new Ui::MainWindow),
-      current_x_index_(0),
-      current_y_index_(0),
-      white_button_rect_(300, 300, cell_size_ * 3, cell_size_),
-      black_button_rect_(300, 300 + cell_size_ + 3, cell_size_ * 3, cell_size_),
-      gray_button_rect_(start_x_pos_ + cell_size_ * 8 + 2, start_y_pos_ + cell_size_ * 7,
-                        cell_size_ * 2, cell_size_) {
+    : QMainWindow(parent), ui(new Ui::MainWindow), current_x_index_(0), current_y_index_(0) {
     ui->setupUi(this);
+    connect(ui->WhitePlayerPushButton, &QPushButton::clicked, this,
+            &MainWindow::WhitePushButtonClicked);
+    connect(ui->BlackPlayerPushButton, &QPushButton::clicked, this,
+            &MainWindow::BlackPushButtonClicked);
+    connect(ui->UndoMovePushButton, &QPushButton::clicked, this,
+            &MainWindow::UndoMovePushButtonClicked);
+    connect(ui->RestartPushButton, &QPushButton::clicked, this,
+            &MainWindow::RestartPushButtonClicked);
+    ui->UndoMovePushButton->hide();
+    ui->RestartPushButton->hide();
+
     SetUpImages();
     SetUp();
 }
@@ -203,32 +207,6 @@ void MainWindow::DrawBoardSquares(QPainter& p) {
     }
 }
 
-void MainWindow::DrawUndoMoveButton(QPainter& p) {
-    p.setPen(Qt::gray);
-    p.setBrush(Qt::gray);
-    p.drawRect(gray_button_rect_);
-}
-
-void MainWindow::DrawChoosingSideButtons(QPainter& p) {
-    QColor my_white(235, 246, 208);
-    QFont font("Arial", 30);
-
-    font.setBold(true);
-    p.setFont(font);
-    p.setRenderHint(QPainter::Antialiasing, true);
-    p.setPen(Qt::black);
-    p.setBrush(my_white);
-    p.drawRect(white_button_rect_);
-
-    p.drawText(white_button_rect_, Qt::AlignCenter, "White");
-
-    p.setPen(my_white);
-    p.setBrush(Qt::black);
-    p.drawRect(black_button_rect_);
-
-    p.drawText(black_button_rect_, Qt::AlignCenter, "Black");
-}
-
 void MainWindow::DrawFigures(QPainter& p) {
     for (size_t i = 0; i < 8; ++i) {
         for (size_t j = 0; j < 8; ++j) {
@@ -241,12 +219,11 @@ void MainWindow::DrawFigures(QPainter& p) {
 void MainWindow::paintEvent(QPaintEvent*) {
     // draw board
     QPainter p(this);
-    if (click_state_ == ClickGameState::kChoosePlaySide)
-        DrawChoosingSideButtons(p);
-    else {
+    if (click_state_ != ClickGameState::kChoosePlaySide) {
         DrawBoardSquares(p);
 
-        if (board_->GetGameState() != GameResultStatus::kPlayingNow) {
+        if (board_->GetGameState() != GameResultStatus::kPlayingNow &&
+            board_->GetGameState() != GameResultStatus::kNotStarted) {
             DrawResult(p);
             QTimer::singleShot(1000, this, &MainWindow::RestartGame);
         }
@@ -254,7 +231,6 @@ void MainWindow::paintEvent(QPaintEvent*) {
             DrawLegalMoves(p);
         }
 
-        DrawUndoMoveButton(p);
         DrawFigures(p);
 
         if (click_state_ == ClickGameState::kChooseFigureToPromote) {
@@ -265,7 +241,7 @@ void MainWindow::paintEvent(QPaintEvent*) {
 
 void MainWindow::RestartGame() {
     click_state_ = ClickGameState::kChoosePlaySide;
-    board_.reset();
+    ui->RestartPushButton->show();
 }
 
 void MainWindow::RunBenchmark() {  // test function
@@ -295,28 +271,13 @@ void MainWindow::OnComputerTurn() {
 
 void MainWindow::mousePressEvent(QMouseEvent* event) {
     // check for click
-    if (click_state_ != ClickGameState::kChoosePlaySide &&
+    if (click_state_ == ClickGameState::kChoosePlaySide ||
         board_->GetGameState() != GameResultStatus::kPlayingNow &&
-        board_->GetGameState() != GameResultStatus::kNotStarted)
+            board_->GetGameState() != GameResultStatus::kNotStarted)
         return;
     QPoint pos = event->pos();
     QRect area(start_x_pos_, start_y_pos_, cell_size_ * 8, cell_size_ * 8);
-
     switch (click_state_) {
-        case ClickGameState::kChoosePlaySide: {
-            if (white_button_rect_.contains(pos)) {
-                board_ = std::make_unique<Board>(true);
-                computer_move_ = false;
-                click_state_ = ClickGameState::kNone;
-            } else if (black_button_rect_.contains(pos)) {
-                board_ = std::make_unique<Board>(false);
-                computer_move_ = true;
-                QTimer::singleShot(1000, this, &MainWindow::OnComputerTurn);
-
-                click_state_ = ClickGameState::kNone;
-            }
-            break;
-        }
         case ClickGameState::kNone: {
             if (computer_move_) return;
             if (area.contains(pos)) {
@@ -326,10 +287,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
                     board_->AllFigureMove(current_y_index_ * 8 + current_x_index_);
                     click_state_ = ClickGameState::kChoosingFigure;
                 }
-            } else if (gray_button_rect_.contains(pos)) {
-                board_->UndoMove();
             }
-
             break;
         }
         case ClickGameState::kChoosingFigure: {
@@ -388,4 +346,45 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::WhitePushButtonClicked() {
+    ui->WhitePlayerPushButton->hide();
+    ui->BlackPlayerPushButton->hide();
+    ui->UndoMovePushButton->show();
+
+    board_ = std::make_unique<Board>(true);
+    computer_move_ = false;
+    click_state_ = ClickGameState::kNone;
+    update();
+}
+
+void MainWindow::BlackPushButtonClicked() {
+    ui->WhitePlayerPushButton->hide();
+    ui->BlackPlayerPushButton->hide();
+    ui->UndoMovePushButton->show();
+
+    board_ = std::make_unique<Board>(false);
+    computer_move_ = true;
+    QTimer::singleShot(1000, this, &MainWindow::OnComputerTurn);
+    click_state_ = ClickGameState::kNone;
+    update();
+}
+
+void MainWindow::UndoMovePushButtonClicked() {
+    if (!computer_move_ && click_state_ != ClickGameState::kChoosePlaySide) {
+        board_->UndoMove();
+        board_->UndoMove();
+        update();
+    }
+}
+
+void MainWindow::RestartPushButtonClicked() {
+    ui->WhitePlayerPushButton->show();
+    ui->BlackPlayerPushButton->show();
+    ui->UndoMovePushButton->hide();
+    ui->RestartPushButton->hide();
+
+    board_.reset();
+    update();
 }

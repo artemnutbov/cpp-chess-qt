@@ -34,7 +34,6 @@ private:
     static const int start_x_pos_ = 100;
     static const int start_y_pos_ = 70;
     static const int cell_size_ = 60;
-
     int current_x_index_ = 0;
     int current_y_index_ = 0;
     bool computer_move_;
@@ -42,9 +41,6 @@ private:
     std::array<std::array<QPoint, 8>, 8> coordinates_board_;
     std::array<FiguresName, 4> promote_figures_;
     ClickGameState click_state_ = ClickGameState::kChoosePlaySide;
-    QRect white_button_rect_;
-    QRect black_button_rect_;
-    QRect gray_button_rect_;
 
     std::unique_ptr<Board> board_;
     ImagesMap images_map_;
@@ -56,13 +52,16 @@ private:
     void DrawFigurePromotion(QPainter&);
     void DrawBoardSquares(QPainter&);
     void DrawFigures(QPainter&);
-    void DrawChoosingSideButtons(QPainter&);
-    void DrawUndoMoveButton(QPainter&);
 
 private slots:
     void RunBenchmark();
     void OnComputerTurn();
     void RestartGame();
+
+    void WhitePushButtonClicked();
+    void BlackPushButtonClicked();
+    void UndoMovePushButtonClicked();
+    void RestartPushButtonClicked();
 
 protected:
     void paintEvent(QPaintEvent*) override;
