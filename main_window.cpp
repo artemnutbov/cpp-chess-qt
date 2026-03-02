@@ -5,7 +5,7 @@
 #include <QPainterPath>
 #include <QThreadPool>
 #include <QTimer>
-#include <chrono>
+// #include <chrono>
 
 #include "./ui_main_window.h"
 
@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget* parent)
             &MainWindow::RestartPushButtonClicked);
     ui->UndoMovePushButton->hide();
     ui->RestartPushButton->hide();
-
+    this->setStyleSheet("QMainWindow { background-color: #2b2b2b; }");
     SetUpImages();
     SetUp();
 }
@@ -36,7 +36,7 @@ QPixmap MainWindow::CreateImage(const char* path, bool is_white) {
     else
         mask = img.createMaskFromColor(Qt::white);
     img.setMask(mask);
-    img = img.scaled(cell_size_, cell_size_, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    img = img.scaled(kCellSize, kCellSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     return img;
 }
 void MainWindow::SetUpImages() {
@@ -59,7 +59,7 @@ void MainWindow::SetUp() {
     for (size_t i = 0; i < 8; ++i) {
         for (size_t j = 0; j < 8; ++j) {
             coordinates_board_[i][j] =
-                QPoint(start_x_pos_ + cell_size_ * j, start_y_pos_ + cell_size_ * i);
+                QPoint(kStartBoardXPos + kCellSize * j, kStartBoardYPos + kCellSize * i);
         }
     }
     promote_figures_[0] = FiguresName::kBishop;
@@ -116,25 +116,25 @@ void MainWindow::DrawLegalMoves(QPainter& p) {
     QColor my_transparent_yellow(245, 246, 130, 160);
     p.setBrush(my_transparent_yellow);
     p.drawRect(coordinates_board_[current_y_index_][current_x_index_].x(),
-               coordinates_board_[current_y_index_][current_x_index_].y(), cell_size_, cell_size_);
+               coordinates_board_[current_y_index_][current_x_index_].y(), kCellSize, kCellSize);
 
     QColor my_transparent_black(0, 0, 0, 20);
 
-    int circle_radius = cell_size_ / 6;
-    int half_cell_size_ = cell_size_ / 2;
+    int circle_radius = kCellSize / 6;
+    int half_kCellSize = kCellSize / 2;
     int cicle_thickness = 6;
     QPainterPath path;
     p.setBrush(my_transparent_black);
     for (const auto& it : board_->GetAllLegalMoves()) {
-        QPointF center_of_cell((it.first & 7) * cell_size_ + start_x_pos_ + half_cell_size_,
-                               (it.first >> 3) * cell_size_ + half_cell_size_ + start_y_pos_);
+        QPointF center_of_cell((it.first & 7) * kCellSize + kStartBoardXPos + half_kCellSize,
+                               (it.first >> 3) * kCellSize + half_kCellSize + kStartBoardYPos);
 
         if (it.second == MoveTypes::kCapture ||
             it.second == MoveTypes::kPromoteCapture) {  // idk problem with drawing that circle
                                                             // same transparent color
-            path.addEllipse(center_of_cell, half_cell_size_, half_cell_size_);
-            path.addEllipse(center_of_cell, half_cell_size_ - cicle_thickness,
-                            half_cell_size_ - cicle_thickness);
+            path.addEllipse(center_of_cell, half_kCellSize, half_kCellSize);
+            path.addEllipse(center_of_cell, half_kCellSize - cicle_thickness,
+                            half_kCellSize - cicle_thickness);
             p.setBrush(my_transparent_black);
             p.fillPath(path, p.brush());
         } else
@@ -149,7 +149,7 @@ void MainWindow::DrawFigurePromotion(QPainter& p) {
     bool is_white_pov = board_->GetWhitePov();
     if (7 == promote_index >> 3) {
         QRect promote_rect(coordinates_board_[(promote_index >> 3) - 3][promote_index & 7],
-                           QSize(cell_size_, 4 * cell_size_));
+                           QSize(kCellSize, 4 * kCellSize));
         p.drawRect(promote_rect);
 
         p.drawPixmap(coordinates_board_[(promote_index >> 3) - 3][promote_index & 7],
@@ -162,7 +162,7 @@ void MainWindow::DrawFigurePromotion(QPainter& p) {
                      images_map_[Board::NameToFigure(promote_figures_[3], !is_white_pov)]);
     } else {
         QRect promote_rect(coordinates_board_[(promote_index >> 3)][promote_index & 7],
-                           QSize(cell_size_, 4 * cell_size_));
+                           QSize(kCellSize, 4 * kCellSize));
         p.drawRect(promote_rect);
 
         p.drawPixmap(coordinates_board_[(promote_index >> 3) + 3][promote_index & 7],
@@ -185,10 +185,10 @@ void MainWindow::DrawBoardSquares(QPainter& p) {
         for (size_t j = 0; j < 8; ++j) {
             if (j % 2 == 0)
                 p.drawRect(coordinates_board_[i * 2][j].x(), coordinates_board_[i * 2][j].y(),
-                           cell_size_, cell_size_);
+                           kCellSize, kCellSize);
             else
                 p.drawRect(coordinates_board_[1 + i * 2][j].x(),
-                           coordinates_board_[1 + i * 2][j].y(), cell_size_, cell_size_);
+                           coordinates_board_[1 + i * 2][j].y(), kCellSize, kCellSize);
         }
     }
     QColor my_green(115, 149, 82);
@@ -199,10 +199,10 @@ void MainWindow::DrawBoardSquares(QPainter& p) {
         for (size_t j = 0; j < 8; ++j) {
             if (j % 2 == 0)
                 p.drawRect(coordinates_board_[1 + i * 2][j].x(),
-                           coordinates_board_[1 + i * 2][j].y(), cell_size_, cell_size_);
+                           coordinates_board_[1 + i * 2][j].y(), kCellSize, kCellSize);
             else
                 p.drawRect(coordinates_board_[i * 2][j].x(), coordinates_board_[i * 2][j].y(),
-                           cell_size_, cell_size_);
+                           kCellSize, kCellSize);
         }
     }
 }
@@ -213,6 +213,38 @@ void MainWindow::DrawFigures(QPainter& p) {
             if (board_->ValidIndex(i * 8 + j))
                 p.drawPixmap(coordinates_board_[i][j].x(), coordinates_board_[i][j].y(),
                              images_map_[board_->GetFigure(i * 8 + j)]);
+        }
+    }
+}
+
+void MainWindow::DrawCapturedPiecesDisplay(QPainter& p) {
+    int current_display_up_x = kStartCapturedFigureDisplayUpX;
+    int current_display_down_x = kStartCapturedFigureDisplayDownX;
+
+    for (auto captured_figure : board_->GetCaptureFigures()) {
+        QPixmap img = images_map_[captured_figure];
+        img = img.scaled(kCapturedFigureDisplaySize, kCapturedFigureDisplaySize,
+                         Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        bool is_white = Config::FigureToSide(captured_figure);
+        if (is_white_pov_) {
+            if (!is_white) {
+                p.drawPixmap(current_display_down_x, kStartCapturedFigureDisplayDownY, img);
+                current_display_down_x += kCapturedFigureDisplayStep;
+
+            } else {
+                p.drawPixmap(current_display_up_x, kStartCapturedFigureDisplayUpY, img);
+                current_display_up_x += kCapturedFigureDisplayStep;
+            }
+
+        } else {
+            if (is_white) {
+                p.drawPixmap(current_display_down_x, kStartCapturedFigureDisplayDownY, img);
+                current_display_down_x += kCapturedFigureDisplayStep;
+
+            } else {
+                p.drawPixmap(current_display_up_x, kStartCapturedFigureDisplayUpY, img);
+                current_display_up_x += kCapturedFigureDisplayStep;
+            }
         }
     }
 }
@@ -233,6 +265,8 @@ void MainWindow::paintEvent(QPaintEvent*) {
 
         DrawFigures(p);
 
+        DrawCapturedPiecesDisplay(p);
+
         if (click_state_ == ClickGameState::kChooseFigureToPromote) {
             DrawFigurePromotion(p);
         }
@@ -245,21 +279,20 @@ void MainWindow::RestartGame() {
 }
 
 void MainWindow::RunBenchmark() {  // test function
-    // int depth = 4;
     computer_move_ = true;
     // qDebug() << "Starting Benchmark at Depth " << depth << "...";
 
-    auto start_time = std::chrono::high_resolution_clock::now();
+    // auto start_time = std::chrono::high_resolution_clock::now();
 
     board_->MakeBotMove(board_->SearchRoot(3000));  // call computer move
-    auto end_time = std::chrono::high_resolution_clock::now();
+    // auto end_time = std::chrono::high_resolution_clock::now();
 
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    // auto duration =
+    //     std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
     // qDebug() << "Time taken: " << duration << " ms " << nodes;
 
-    qDebug() << "Time taken: " << duration << " ms ";
+    // qDebug() << "Time taken: " << duration << " ms ";
     board_->SetResultState();
     update();
     computer_move_ = false;
@@ -276,13 +309,13 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             board_->GetGameState() != GameResultStatus::kNotStarted)
         return;
     QPoint pos = event->pos();
-    QRect area(start_x_pos_, start_y_pos_, cell_size_ * 8, cell_size_ * 8);
+    QRect area(kStartBoardXPos, kStartBoardYPos, kCellSize * 8, kCellSize * 8);
     switch (click_state_) {
         case ClickGameState::kNone: {
             if (computer_move_) return;
             if (area.contains(pos)) {
-                current_x_index_ = (pos.x() - start_x_pos_) / cell_size_;
-                current_y_index_ = (pos.y() - start_y_pos_) / cell_size_;
+                current_x_index_ = (pos.x() - kStartBoardXPos) / kCellSize;
+                current_y_index_ = (pos.y() - kStartBoardYPos) / kCellSize;
                 if (board_->ValidIndex(current_y_index_ * 8 + current_x_index_)) {
                     board_->AllFigureMove(current_y_index_ * 8 + current_x_index_);
                     click_state_ = ClickGameState::kChoosingFigure;
@@ -295,8 +328,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             if (!area.contains(pos)) {
                 return;
             }
-            int new_x_index = (pos.x() - start_x_pos_) / cell_size_;
-            int new_y_index = (pos.y() - start_y_pos_) / cell_size_;
+            int new_x_index = (pos.x() - kStartBoardXPos) / kCellSize;
+            int new_y_index = (pos.y() - kStartBoardYPos) / kCellSize;
             if (!board_->ActionMove(current_x_index_ + current_y_index_ * 8,
                                     new_x_index + new_y_index * 8)) {
                 click_state_ = ClickGameState::kNone;
@@ -319,11 +352,11 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             if ((promote_index >> 3) == 7) promote_index -= 3 * 8;
             QRect area_of_promote_figures_(
                 coordinates_board_[promote_index >> 3][promote_index & 7],
-                QSize(cell_size_, cell_size_ * 4));
+                QSize(kCellSize, kCellSize * 4));
             if (!area_of_promote_figures_.contains(pos)) {
                 break;
             }
-            int Promotion_rank = (pos.y() - start_y_pos_) / cell_size_;
+            int Promotion_rank = (pos.y() - kStartBoardYPos) / kCellSize;
             FiguresName choosen_figure_to_promote;
             if ((promote_index >> 3) == 0) {
                 board_->Promotion(*std::prev(promote_figures_.end(), 1 + Promotion_rank),
@@ -353,7 +386,8 @@ void MainWindow::WhitePushButtonClicked() {
     ui->BlackPlayerPushButton->hide();
     ui->UndoMovePushButton->show();
 
-    board_ = std::make_unique<Board>(true);
+    is_white_pov_ = true;
+    board_ = std::make_unique<Board>(is_white_pov_);
     computer_move_ = false;
     click_state_ = ClickGameState::kNone;
     update();
@@ -364,7 +398,8 @@ void MainWindow::BlackPushButtonClicked() {
     ui->BlackPlayerPushButton->hide();
     ui->UndoMovePushButton->show();
 
-    board_ = std::make_unique<Board>(false);
+    is_white_pov_ = false;
+    board_ = std::make_unique<Board>(is_white_pov_);
     computer_move_ = true;
     QTimer::singleShot(1000, this, &MainWindow::OnComputerTurn);
     click_state_ = ClickGameState::kNone;

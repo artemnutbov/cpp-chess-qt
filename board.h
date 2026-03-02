@@ -72,6 +72,7 @@ class Board {
     MoveMap index_pair_map_;
     GameResultStatus game_result_status_;
 
+    std::vector<Figures> captured_figures_;
     // zobrist hashing variables
     uint64_t current_hash_ = 0;
 
@@ -124,6 +125,7 @@ public:
     bool IsPawnPromote(int);
     Figures GetFigure(int);
     MoveMap& GetAllLegalMoves();
+    const std::vector<Figures>& GetCaptureFigures();
 
     static void InitZobrist();
     uint64_t ComputeHash();     // calculates the hash of the CURRENT board

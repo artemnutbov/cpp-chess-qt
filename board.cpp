@@ -18,6 +18,7 @@ uint64_t Board::zobrist_en_passant_[8];
 Board::Board(bool is_white_pov)
     : is_white_pov_(is_white_pov), game_result_status_(GameResultStatus::kNotStarted) {
     board_.fill(Figures::kNone);
+    captured_figures_.reserve(30);  // max number of figure that can be captured
     is_in_start_pos_board_.fill(true);
     SetUp();
     InitZobrist();
@@ -393,9 +394,13 @@ void Board::MakeBotMove(Move bot_move) {
 
     if (bot_move.type == MoveTypes::kCapture) {
         current_move.additional_figure = board_[new_square];
+        captured_figures_.push_back(board_[new_square]);
         board_[new_square] = Figures::kNone;
     } else if (bot_move.type == MoveTypes::kPromoteCapture ||
                bot_move.type == MoveTypes::kPromoteToEmptySquare) {
+        if (bot_move.type == MoveTypes::kPromoteCapture)
+            captured_figures_.push_back(board_[new_square]);
+
         current_move.additional_figure = board_[new_square];
         bool is_white = Config::FigureToSide(board_[start_square]);
         if (is_white)
@@ -639,6 +644,10 @@ MoveMap& Board::GetAllLegalMoves() {
     return index_pair_map_;
 }
 
+const std::vector<Figures>& Board::GetCaptureFigures() {
+    return captured_figures_;
+}
+
 void Board::SquareMove(int start_square) {
     Figures current_name = board_[start_square];
     if (current_name == Figures::kBlackBishop || current_name == Figures::kWhiteBishop)
@@ -772,6 +781,7 @@ bool Board::ActionMove(int start_square, int new_square) {
 
     if (it->second == MoveTypes::kCapture || it->second == MoveTypes::kPromoteCapture) {
         current_move.additional_figure = board_[new_square];
+        captured_figures_.push_back(board_[new_square]);
         board_[new_square] = Figures::kNone;
     } else if (it->second == MoveTypes::kShortCastling) {
         bool is_white = Config::FigureToSide(board_[start_square]);
@@ -851,9 +861,10 @@ void Board::UndoMove() {
     // board_[last_move.from_square] = last_move.our_figure;
     is_white_turn_to_move_ = !is_white_turn_to_move_;
     if (last_move.move_type == MoveTypes::kCapture ||
-        last_move.move_type == MoveTypes::kPromoteCapture)
+        last_move.move_type == MoveTypes::kPromoteCapture) {
         board_[last_move.to_square] = last_move.additional_figure;
-    else if (last_move.move_type == MoveTypes::kShortCastling) {
+        captured_figures_.pop_back();
+    } else if (last_move.move_type == MoveTypes::kShortCastling) {
         bool is_white = Config::FigureToSide(last_move.our_figure);
         if (is_white_pov_) {
             std::swap(board_[(last_move.from_square >> 3) * 8 + 7],

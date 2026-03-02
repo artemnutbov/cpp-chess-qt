@@ -31,12 +31,21 @@ public:
 
 private:
     Ui::MainWindow* ui;
-    static const int start_x_pos_ = 100;
-    static const int start_y_pos_ = 70;
-    static const int cell_size_ = 60;
+    static const int kStartBoardXPos = 100;
+    static const int kStartBoardYPos = 70;
+    static const int kCellSize = 60;
+    // for displaying captured pieces
+    static const int kStartCapturedFigureDisplayUpX = kStartBoardXPos + 5;
+    static const int kStartCapturedFigureDisplayUpY = kStartBoardYPos - kCellSize / 2;
+    static const int kStartCapturedFigureDisplayDownX = kStartBoardXPos + 5;
+    static const int kStartCapturedFigureDisplayDownY = kStartBoardYPos + kCellSize * 8 + 3;
+    static const int kCapturedFigureDisplayStep = kCellSize / 3 + 1;
+    static const int kCapturedFigureDisplaySize = kCellSize / 2;
+
     int current_x_index_ = 0;
     int current_y_index_ = 0;
     bool computer_move_;
+    bool is_white_pov_;
 
     std::array<std::array<QPoint, 8>, 8> coordinates_board_;
     std::array<FiguresName, 4> promote_figures_;
@@ -52,6 +61,7 @@ private:
     void DrawFigurePromotion(QPainter&);
     void DrawBoardSquares(QPainter&);
     void DrawFigures(QPainter&);
+    void DrawCapturedPiecesDisplay(QPainter&);
 
 private slots:
     void RunBenchmark();
