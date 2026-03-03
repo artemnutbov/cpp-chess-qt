@@ -45,6 +45,7 @@ private:
     int current_x_index_ = 0;
     int current_y_index_ = 0;
     bool computer_move_;
+    bool is_play_against_bot_;
     bool is_white_pov_;
 
     std::array<std::array<QPoint, 8>, 8> coordinates_board_;
@@ -63,6 +64,7 @@ private:
     void DrawFigures(QPainter&);
     void DrawCapturedPiecesDisplay(QPainter&);
 
+    bool IsGameSetUp();
 private slots:
     void RunBenchmark();
     void OnComputerTurn();

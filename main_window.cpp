@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget* parent)
             &MainWindow::RestartPushButtonClicked);
     ui->UndoMovePushButton->hide();
     ui->RestartPushButton->hide();
-    this->setStyleSheet("QMainWindow { background-color: #2b2b2b; }");
+    this->setStyleSheet("QMainWindow { background-color: hsla(0,0%,50%,0.6); }");
     SetUpImages();
     SetUp();
 }
@@ -340,7 +340,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             } else {
                 click_state_ = ClickGameState::kNone;
                 board_->SetResultState();
-                if (board_->GetGameState() == GameResultStatus::kPlayingNow)
+                if (board_->GetGameState() == GameResultStatus::kPlayingNow && is_play_against_bot_)
                     QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             }
             break;
@@ -368,7 +368,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
             click_state_ = ClickGameState::kNone;
             board_->SetResultState();
 
-            QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
+            if (is_play_against_bot_) QTimer::singleShot(100, this, &MainWindow::OnComputerTurn);
             break;
         }
         default:
@@ -377,14 +377,24 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
     update();
 }
 
-MainWindow::~MainWindow() {
-    delete ui;
+bool MainWindow::IsGameSetUp() {
+    if (ui->BotPlayButton->isChecked())
+        computer_move_ = is_play_against_bot_ = true;
+    else if (ui->LocalPlayButton->isChecked())
+        is_play_against_bot_ = computer_move_ = false;
+    else
+        return false;
+    ui->WhitePlayerPushButton->hide();
+    ui->BlackPlayerPushButton->hide();
+    ui->LocalPlayButton->hide();
+    ui->BotPlayButton->hide();
+
+    ui->UndoMovePushButton->show();
+    return true;
 }
 
 void MainWindow::WhitePushButtonClicked() {
-    ui->WhitePlayerPushButton->hide();
-    ui->BlackPlayerPushButton->hide();
-    ui->UndoMovePushButton->show();
+    if (!IsGameSetUp()) return;
 
     is_white_pov_ = true;
     board_ = std::make_unique<Board>(is_white_pov_);
@@ -394,14 +404,12 @@ void MainWindow::WhitePushButtonClicked() {
 }
 
 void MainWindow::BlackPushButtonClicked() {
-    ui->WhitePlayerPushButton->hide();
-    ui->BlackPlayerPushButton->hide();
-    ui->UndoMovePushButton->show();
-
+    if (!IsGameSetUp()) return;
     is_white_pov_ = false;
     board_ = std::make_unique<Board>(is_white_pov_);
-    computer_move_ = true;
-    QTimer::singleShot(1000, this, &MainWindow::OnComputerTurn);
+
+    if (is_play_against_bot_) QTimer::singleShot(1000, this, &MainWindow::OnComputerTurn);
+
     click_state_ = ClickGameState::kNone;
     update();
 }
@@ -417,9 +425,16 @@ void MainWindow::UndoMovePushButtonClicked() {
 void MainWindow::RestartPushButtonClicked() {
     ui->WhitePlayerPushButton->show();
     ui->BlackPlayerPushButton->show();
+    ui->LocalPlayButton->show();
+    ui->BotPlayButton->show();
+
     ui->UndoMovePushButton->hide();
     ui->RestartPushButton->hide();
 
     board_.reset();
     update();
+}
+
+MainWindow::~MainWindow() {
+    delete ui;
 }
