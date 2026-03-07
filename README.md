@@ -40,7 +40,7 @@ And to spot 3-fold repetitions, it uses [Zobrist Hashing](https://www.chessprogr
 I originally built the board using OOP(an abstract `Basic_figure` class and a 2D array of `unique_ptr`s). But after deeper research into how chess AI algorithms work, I refactored the whole thing into a flat **1D array using `enum class`** to speed up calculation(after refactoring don't need to allocate and deallocate 
 memory in heap, just assigning). My chess logic is separated from the Qt UI code. Also, I use Qt's `QThreadPool` to calculate the bot's moves in the background, so the game window never freezes while the AI is "thinking".
 
-Additionally, I use **GoogleTest** to automatically check that the core game logic works correctly. And try to follow the **Google C++ Style Guide** for naming, and formatting using `clang-format`.
+Additionally, I use **GoogleTest** to automatically check that the core game logic works correctly. And follow the **Google C++ Style Guide** for naming, and formatting using `clang-format`.
 
 ## Build
 
