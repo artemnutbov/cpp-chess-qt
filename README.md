@@ -31,7 +31,7 @@ The game can be played against an AI bot and locally against a friend. In the st
 ## About AI Engine 
 
 
-The bot can beat 2000 elo bots on Chess.com. It uses [Negamax](https://www.chessprogramming.org/Negamax)(a simple version of Minimax) and [Alpha-Beta Pruning](https://www.chessprogramming.org/Alpha-Beta) to look ahead and evaluate the best possible moves.
+The bot is capable of competing with ~2000 Elo level bots on Chess.com in informal testing. It uses [Negamax](https://www.chessprogramming.org/Negamax)(a simple version of Minimax) and [Alpha-Beta Pruning](https://www.chessprogramming.org/Alpha-Beta) to look ahead and evaluate the best possible moves.
 Also, the engine uses [Iterative Deepening](https://www.chessprogramming.org/Iterative_Deepening), it searches deeper and deeper into the move tree until its time limit runs out, ensuring it plays a strong move in a reasonable amount of time.
 And to spot 3-fold repetitions, it uses [Zobrist Hashing](https://www.chessprogramming.org/Zobrist_Hashing).
 
@@ -77,6 +77,11 @@ To build and run this project, you'll need:
   *Windows*
   
   Important note!!! By default, BOOST_ROOT is set to `C:/Libraries/boost_1_89_0` you can change it in CMakelists.txt `set(BOOST_ROOT "C:/Libraries/boost_1_89_0")`.   
+  ```
+  mkdir build && cd build
+  cmake -DBOOST_ROOT="C:/Libraries/boost_1_89_0" ..
+  cmake --build .
+  ```
   
 </details>
 
