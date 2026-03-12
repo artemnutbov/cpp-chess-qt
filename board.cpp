@@ -24,9 +24,24 @@ Board::Board(bool is_white_pov)
     InitZobrist();
 }
 
+Board::Board(const char* fen)
+    : is_white_pov_(true), game_result_status_(GameResultStatus::kPlayingNow) {
+    board_.fill(Figures::kNone);
+    captured_figures_.reserve(30);  // max number of figure that can be captured
+    is_in_start_pos_board_.fill(false);
+    history_.reserve(100);  // reserve a little bigger than avg moves
+
+    LoadFEN(fen);
+    InitZobrist();
+
+    current_hash_ = ComputeHash();
+}
+
 void Board::SetUp() {
     history_.reserve(100);  // reserve a little bigger than avg moves
     game_result_status_ = GameResultStatus::kPlayingNow;
+    // LoadFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq");
+    // LoadFEN("r1bqk1nr/pppp1Qpp/2n5/2b1p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4");
     int white_pov_pieces_rank = is_white_pov_ ? 7 * 8 : 0;
     int black_pov_pieces_rank = !is_white_pov_ ? 7 * 8 : 0;
 
@@ -66,7 +81,6 @@ void Board::SetUp() {
         board_[white_pov_pawns_rank + i] = Figures::kWhitePawn;
         board_[black_pov_pawns_rank + i] = Figures::kBlackPawn;
     }
-
     current_hash_ = ComputeHash();
 }
 
@@ -142,12 +156,6 @@ int Board::QuiescenceSearch(int alpha, int beta) {
         MakeBotMove(move);
         int score = -QuiescenceSearch(-beta, -alpha);
         UndoMove();
-
-        // if (is_white_turn_to_move_ != start_turn) {
-        //     qDebug() << "CRITICAL ERROR: is_white_turn_to_move_ broken after move " << move.from
-        //     << "to" << move.to;
-        //     is_white_turn_to_move_ = start_turn;
-        // }
 
         if (score >= beta) return beta;
         if (score > alpha) alpha = score;
@@ -358,16 +366,16 @@ Move Board::SearchRoot(int max_time_ms) {
     for (int depth = 1; depth <= 100; ++depth) {
         current_root_depth_ = depth;
 
-        int score = Negamax(depth, -50000, 50000);
-
+        // int score = Negamax(depth, -50000, 50000);
+        Negamax(depth, -50000, 50000);
         final_best_move = current_depth_best_move_;
         best_root_move_ = final_best_move;
         auto end = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(end - start_time).count();
 
-        qDebug() << "Depth" << depth << " finished. Score:" << score << " Time:" << duration
-                 << "ms";
+        // qDebug() << "Depth" << depth << " finished. Score:" << score << " Time:" << duration
+        //          << "ms";
 
         // if we have used more than 25% of our time
         if (duration * 8 > max_time_ms) {
@@ -380,11 +388,6 @@ Move Board::SearchRoot(int max_time_ms) {
 void Board::MakeBotMove(Move bot_move) {
     int start_square = bot_move.from;
     int new_square = bot_move.to;
-    if (start_square == new_square || new_square < 0 || new_square > 63) {
-        qDebug() << "Bot cannot move! Game Over or Bug. start_square" << start_square
-                 << " new_square: " << new_square << "type " << int(bot_move.type);
-        return;
-    }
     MoveUndoInfo current_move;
     current_move.from_square = start_square;
     current_move.to_square = new_square;
@@ -474,7 +477,132 @@ void Board::MakeBotMove(Move bot_move) {
     history_.push_back(current_move);
     current_hash_ = ComputeHash();
 }
+void Board::LoadFEN(const char* fen) {
+    int current_fen_pos = 0;
+    bool is_number = false;
+    int number = 0;
+    char current_symbol;
+    Figures figure_to_fill;
 
+    current_symbol = fen[current_fen_pos];
+    figure_to_fill = FENNameToFigure(current_symbol, is_number);
+    for (int i = 0; i < 64; ++i) {
+        if (is_number) {
+            if (static_cast<int>(current_symbol) - static_cast<int>('0') - 1 > number)
+                ++number;
+            else {
+                number = 0;
+                is_number = false;
+                current_symbol = fen[current_fen_pos];
+                if (current_symbol == '/') current_symbol = fen[++current_fen_pos];
+                if (current_symbol == 'k') black_king_index_ = i;
+                if (current_symbol == 'K') white_king_index_ = i;
+
+                figure_to_fill = FENNameToFigure(current_symbol, is_number);
+                ++current_fen_pos;
+            }
+        } else {
+            current_symbol = fen[current_fen_pos];
+            if (current_symbol == '/') current_symbol = fen[++current_fen_pos];
+            if (current_symbol == 'k') black_king_index_ = i;
+            if (current_symbol == 'K') white_king_index_ = i;
+            figure_to_fill = FENNameToFigure(current_symbol, is_number);
+            ++current_fen_pos;
+        }
+        board_[i] = figure_to_fill;
+    }
+
+    is_white_turn_to_move_ = fen[++current_fen_pos] == 'w' ? true : false;
+
+    current_fen_pos += 2;
+    if (fen[current_fen_pos] == '-')
+        current_fen_pos += 2;
+    else {
+        for (; fen[current_fen_pos] != ' '; ++current_fen_pos) {
+            switch (fen[current_fen_pos]) {
+                case 'K':
+                    is_in_start_pos_board_[0] = true;
+                    is_in_start_pos_board_[3] = true;
+                    break;
+                case 'Q':
+                    is_in_start_pos_board_[0] = true;
+                    is_in_start_pos_board_[2] = true;
+                    break;
+                case 'k':
+                    is_in_start_pos_board_[1] = true;
+                    is_in_start_pos_board_[5] = true;
+                    break;
+                case 'q':
+                    is_in_start_pos_board_[1] = true;
+                    is_in_start_pos_board_[4] = true;
+                default:
+                    break;
+            }
+        }
+        ++current_fen_pos;
+    }
+    if (fen[current_fen_pos] == '-')
+        current_fen_pos += 2;
+    else {
+        MoveUndoInfo possible_en_passant;
+        possible_en_passant.move_type = MoveTypes::kMoveToEmptySquare;
+        int current_square = NotationToIndex(fen[current_fen_pos], fen[current_fen_pos + 1]);
+        possible_en_passant.from_square =
+            is_white_turn_to_move_ ? current_square - 8 : current_square + 8;
+        possible_en_passant.to_square =
+            is_white_turn_to_move_ ? current_square + 8 : current_square - 8;
+        possible_en_passant.our_figure =
+            is_white_turn_to_move_ ? Figures::kBlackPawn : Figures::kWhitePawn;
+        current_fen_pos += 3;
+        history_.push_back(possible_en_passant);
+    }
+}
+
+Figures Board::FENNameToFigure(char name, bool& is_number) {
+    switch (name) {
+        case 'b':
+            return Figures::kBlackBishop;
+        case 'B':
+            return Figures::kWhiteBishop;
+        case 'r':
+            return Figures::kBlackRook;
+        case 'R':
+            return Figures::kWhiteRook;
+        case 'n':
+            return Figures::kBlackKnight;
+        case 'N':
+            return Figures::kWhiteKnight;
+        case 'p':
+            return Figures::kBlackPawn;
+        case 'P':
+            return Figures::kWhitePawn;
+        case 'k':
+            return Figures::kBlackKing;
+        case 'K':
+            return Figures::kWhiteKing;
+        case 'q':
+            return Figures::kBlackQueen;
+        case 'Q':
+            return Figures::kWhiteQueen;
+        default:
+            is_number = true;
+            return Figures::kNone;
+    }
+}
+
+int Board::NotationToIndex(char file_char, char rank_char) {
+    // !!! work only if white down
+
+    // Convert 'a'-'h' into 0-7 (a=0, b=1, c=2, etc.)
+    int file = file_char - 'a';
+
+    // Convert '1'-'8' into 7-0.
+    // Since White is down, Rank 8 is row 0, and Rank 1 is row 7.
+    int rank = 8 - (rank_char - '0');
+
+    // Formula: (row * 8) + column
+    return (rank * 8) + file;
+}
 Figures Board::NameToFigure(FiguresName name, bool is_white) {
     switch (name) {
         case FiguresName::kBishop:
@@ -565,27 +693,26 @@ uint64_t Board::ComputeHash() {
         hash ^= zobrist_side_to_move_;
     }
 
-    //  56=WR_A, 63=WR_H, 60=WK, 0=BR_A, 7=BR_H, 4=BK
-
+    // !!! Work correct only if is_white_pov = true !!!
     // White King Side
 
-    if (board_[63] == Figures::kWhiteRook && !is_in_start_pos_board_[63] &&
-        board_[60] == Figures::kWhiteKing && !is_in_start_pos_board_[60])
+    if (board_[63] == Figures::kWhiteRook && !is_in_start_pos_board_[3] &&
+        board_[60] == Figures::kWhiteKing && !is_in_start_pos_board_[0])
         hash ^= zobrist_castling_[0];
 
     // White Queen Side
-    if (board_[56] == Figures::kWhiteRook && !is_in_start_pos_board_[56] &&
-        board_[60] == Figures::kWhiteKing && !is_in_start_pos_board_[60])
+    if (board_[56] == Figures::kWhiteRook && !is_in_start_pos_board_[2] &&
+        board_[60] == Figures::kWhiteKing && !is_in_start_pos_board_[0])
         hash ^= zobrist_castling_[1];
 
     // Black King Side
-    if (board_[7] == Figures::kBlackRook && !is_in_start_pos_board_[7] &&
-        board_[4] == Figures::kBlackKing && !is_in_start_pos_board_[4])
+    if (board_[7] == Figures::kBlackRook && !is_in_start_pos_board_[5] &&
+        board_[4] == Figures::kBlackKing && !is_in_start_pos_board_[1])
         hash ^= zobrist_castling_[2];
 
     // Black Queen Side
-    if (board_[0] == Figures::kBlackRook && !is_in_start_pos_board_[0] &&
-        board_[4] == Figures::kBlackKing && !is_in_start_pos_board_[4])
+    if (board_[0] == Figures::kBlackRook && !is_in_start_pos_board_[4] &&
+        board_[4] == Figures::kBlackKing && !is_in_start_pos_board_[1])
         hash ^= zobrist_castling_[3];
 
     // 4. En Passant (Check history_ for double pawn push)
@@ -722,18 +849,13 @@ void Board::SetResultState() {
     }
 
     if (is_in_check && game_result_status_ == GameResultStatus::kStalemate) {
-        if (is_white_turn_to_move_) {
+        if (is_white_turn_to_move_)
             game_result_status_ = GameResultStatus::kBlackWin;
-            qDebug() << "checkmate for white!!!!!!!";
-        } else {
+        else
             game_result_status_ = GameResultStatus::kWhiteWin;
-            qDebug() << "checkmate for black!!!!!!!";
-        }
-    } else if (game_result_status_ == GameResultStatus::kStalemate)
-        qDebug() << "Stalemate !!!!!!!";
-    else if (IsRepetition()) {
+
+    } else if (IsRepetition()) {
         game_result_status_ = GameResultStatus::kStalemate;  // or create a kDrawRepetition status
-        qDebug() << "Draw by Repetition!";
         return;
     } else {  // 100 bsc 50 for white and 50 for black
         auto penultimate = history_.back();

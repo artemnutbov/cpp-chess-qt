@@ -284,7 +284,7 @@ void MainWindow::RunBenchmark() {  // test function
 
     // auto start_time = std::chrono::high_resolution_clock::now();
 
-    board_->MakeBotMove(board_->SearchRoot(3000));  // call computer move
+    board_->MakeBotMove(board_->SearchRoot(1000));  // call computer move
     // auto end_time = std::chrono::high_resolution_clock::now();
 
     // auto duration =
@@ -397,7 +397,7 @@ void MainWindow::WhitePushButtonClicked() {
     if (!IsGameSetUp()) return;
 
     is_white_pov_ = true;
-    board_ = std::make_unique<Board>(is_white_pov_);
+    board_ = std::make_unique<Board>(true);
     computer_move_ = false;
     click_state_ = ClickGameState::kNone;
     update();

@@ -80,7 +80,7 @@ class Board {
     // 0-5 white (P,N,B,R,Q,K), 6-11 black
     static uint64_t zobrist_pieces_[12][64];
     static uint64_t zobrist_side_to_move_;
-    static uint64_t zobrist_castling_[4];    // WK, WQ, BK, BQ
+    static uint64_t zobrist_castling_[4];
     static uint64_t zobrist_en_passant_[8];  // 8 files
 
     struct MoveUndoInfo {
@@ -95,24 +95,27 @@ class Board {
 
     std::vector<MoveUndoInfo> history_;
     int QuiescenceSearch(int, int);
-    int GetFigureValue(Figures figure);
-    MoveList GenerateMoves();
-    MoveList GenerateCaptures();
+    int GetFigureValue(Figures);
 
     int current_root_depth_;
     Move best_root_move_;  // best move from the previous completed depth
     Move current_depth_best_move_;
 
 public:
-    int RankMove(const Move& move);  // rate moves
+    int RankMove(const Move&);  // rate moves
     int Evaluate();
     int Negamax(int, int, int);
-    void MakeBotMove(Move bot_move);
+    void MakeBotMove(Move);
+    void LoadFEN(const char*);
+    Figures FENNameToFigure(char, bool&);
+    long long Perft(int);
 
-    long long Perft(int depth);
-
-    Move SearchRoot(int depth);
+    MoveList GenerateMoves();
+    MoveList GenerateCaptures();
+    Move SearchRoot(int);
     static Figures NameToFigure(FiguresName, bool);
+
+    int NotationToIndex(char, char);
     void SquareMove(int);
 
     void UndoMove();
@@ -136,7 +139,8 @@ public:
     int GetPromoteIndex() const;
     bool GetWhitePov() const;
 
-    Board(bool);
+    explicit Board(const char*);
+    explicit Board(bool);
 };
 
 #endif  // BOARD_H
